@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการงานซ่อม</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .toast-container {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            z-index: 1000;
+        }
+        .toast {
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    
+    <div id="login-container" class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm">
+            <h2 class="text-3xl font-bold mb-6 text-center text-gray-800">เข้าสู่ระบบ</h2>
+            <form id="login-form">
+                <div class="mb-4">
+                    <label for="username" class="block text-sm font-medium text-gray-700">ชื่อผู้ใช้</label>
+                    <input type="text" id="username" name="username" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="mb-6">
+                    <label for="password" class="block text-sm font-medium text-gray-700">รหัสผ่าน</label>
+                    <input type="password" id="password" name="password" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    เข้าสู่ระบบ
+                </button>
+                <p id="login-error" class="text-red-500 text-sm mt-4 text-center hidden">ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</p>
+            </form>
+        </div>
+    </div>
+
+    <div id="main-app" class="hidden min-h-screen p-4 sm:p-8 flex items-center justify-center">
+        <div class="bg-white p-6 sm:p-10 rounded-xl shadow-lg w-full max-w-5xl">
+            <div class="flex justify-center items-center mb-4">
+                <h1 class="text-3xl sm:text-4xl font-bold text-gray-800">ระบบจัดการงานซ่อม</h1>
+            </div>
+            
+            <!-- ส่วนสำหรับดูประวัติย้อนหลัง -->
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">ประวัติงานซ่อม</h2>
+            <div class="flex flex-col sm:flex-row gap-4 mb-6">
+                <div class="flex-1">
+                    <label for="history-month" class="block text-sm font-medium text-gray-700">เดือน</label>
+                    <select id="history-month" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                        <!-- Options populated by JS -->
+                    </select>
+                </div>
+                <div class="flex-1">
+                    <label for="history-year" class="block text-sm font-medium text-gray-700">ปี</label>
+                    <select id="history-year" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                        <!-- Options populated by JS -->
+                    </select>
+                </div>
+            </div>
+            
+            <!-- ตารางแสดงรายการงานซ่อม -->
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">รายการงานซ่อม</h2>
+            <div id="status-message" class="mb-4 text-center text-red-500"></div>
+            <div class="overflow-x-auto shadow-md rounded-lg mb-8">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">วันที่</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">รายการที่</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">รายการ</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">หมายเหตุ</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">รายรับ</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ต้นทุน</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <div class="flex items-center space-x-2">
+                                    <input type="checkbox" id="check-all-jobs" class="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out">
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="jobs-list" class="bg-white divide-y divide-gray-200">
+                        <!-- รายการจะถูกสร้างขึ้นด้วย JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- ฟอร์มสำหรับเพิ่ม/แก้ไขงานซ่อม (รูปแบบใหม่) -->
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">เพิ่ม/แก้ไขงานซ่อม</h2>
+            <form id="repair-form" class="bg-gray-50 p-4 rounded-lg shadow-inner flex flex-wrap items-end gap-2 sm:gap-4">
+                <input type="hidden" id="repair-id" name="repairId">
+                
+                <div class="flex-grow min-w-[120px]">
+                    <label for="repair-date-day" class="block text-xs text-gray-500">วันที่</label>
+                    <div class="flex space-x-2 mt-1">
+                        <select id="repair-date-day" class="block w-1/3 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"></select>
+                        <select id="repair-date-month" class="block w-1/3 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"></select>
+                        <select id="repair-date-year" class="block w-1/3 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"></select>
+                    </div>
+                </div>
+                
+                <div class="flex-grow min-w-[120px]">
+                    <label for="customer-name" class="block text-xs text-gray-500">รายการ</label>
+                    <input type="text" id="customer-name" required class="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                </div>
+
+                <div class="flex-grow min-w-[120px]">
+                    <label for="device-select" class="block text-xs text-gray-500">หมายเหตุ</label>
+                    <div class="flex items-center space-x-2">
+                        <select id="device-select" required class="flex-grow mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <!-- Options will be populated by JavaScript -->
+                        </select>
+                        <button type="button" id="manage-notes-btn" class="mt-1 px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded-md hover:bg-gray-300 transition-colors">จัดการ</button>
+                    </div>
+                </div>
+                
+                <div class="flex-grow min-w-[120px]">
+                    <label for="revenue" class="block text-xs text-gray-500">รายรับ</label>
+                    <div class="flex items-center space-x-2 mt-1">
+                        <select id="revenue-select" class="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <option value="number">กรอกตัวเลข</option>
+                            <option value="pending" selected>รอดำเนินการ</option>
+                            <option value="claim">งานเคลม</option>
+                            <option value="refund">คืนเงิน</option>
+                        </select>
+                        <input type="number" id="revenue" style="display: none;" class="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                    </div>
+                </div>
+
+                <div class="flex-grow min-w-[100px]">
+                    <label for="cost" class="block text-xs text-gray-500">ต้นทุน</label>
+                    <div class="flex items-center space-x-2 mt-1">
+                         <select id="cost-select" class="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <option value="number">กรอกตัวเลข</option>
+                            <option value="pending" selected>รอดำเนินการ</option>
+                            <option value="no_cost">-</option>
+                        </select>
+                        <input type="number" id="cost" style="display: none;" class="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                    </div>
+                </div>
+
+                <div class="flex-grow-0 mt-4 sm:mt-0 flex space-x-2">
+                    <button type="submit" id="submit-button" class="flex-grow sm:flex-grow-0 flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition ease-in-out duration-150">
+                        บันทึก
+                    </button>
+                    <button type="button" id="cancel-button" class="flex-grow sm:flex-grow-0 flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150" style="display: none;">
+                        ยกเลิก
+                    </button>
+                </div>
+            </form>
+            
+            <!-- สรุปจำนวนงานซ่อม -->
+            <hr class="my-8 border-t-2 border-gray-200">
+            <h2 class="text-xl font-semibold mb-4 text-gray-700">สรุปจำนวนงานซ่อม</h2>
+            <div id="job-count-summary" class="space-y-4">
+                <!-- Summary cards will be generated here -->
+            </div>
+
+            <!-- สรุปรายการงานซ่อม -->
+            <hr class="my-8 border-t-2 border-gray-200">
+            <h2 class="text-xl font-semibold mb-4 text-gray-700">สรุปรายรับ-ต้นทุน</h2>
+            <div id="summary-container" class="space-y-6">
+                <!-- Summary will be generated here -->
+            </div>
+
+        </div>
+
+        <!-- Confirmation Modal -->
+        <div id="confirm-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-lg p-6 shadow-xl w-full max-w-sm">
+                <h3 class="text-lg font-bold text-gray-900 mb-4" id="confirm-title">ยืนยันการลบ</h3>
+                <p class="text-sm text-gray-600 mb-6" id="confirm-message">คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? การกระทำนี้ไม่สามารถยกเลิกได้</p>
+                <div class="flex justify-end space-x-2">
+                    <button id="confirm-cancel" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">ยกเลิก</button>
+                    <button id="confirm-delete" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">ลบ</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manage Notes Modal -->
+        <div id="manage-notes-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-lg p-6 shadow-xl w-full max-w-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-gray-900">จัดการหมายเหตุ</h3>
+                    <button id="close-manage-notes-modal" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+                </div>
+                
+                <div class="mb-4">
+                    <h4 class="text-sm font-medium text-gray-700 mb-2">เพิ่มหมายเหตุใหม่</h4>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" id="new-note-input-modal" class="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm" placeholder="พิมพ์หมายเหตุใหม่">
+                        <button type="button" id="save-note-button" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-sm font-medium transition-colors">บันทึก</button>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h4 class="text-sm font-medium text-gray-700 mb-2">รายการหมายเหตุที่มีอยู่</h4>
+                    <ul id="notes-list-container" class="space-y-2 max-h-48 overflow-y-auto pr-2">
+                        <!-- Notes will be populated here -->
+                    </ul>
+                </div>
+                
+            </div>
+        </div>
+
+        <!-- Note Jobs Modal -->
+        <div id="note-jobs-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-lg p-6 shadow-xl w-full max-w-2xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 id="note-jobs-modal-title" class="text-lg font-bold text-gray-900"></h3>
+                    <button id="close-note-jobs-modal" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+                </div>
+                <div id="note-jobs-modal-list" class="space-y-2 max-h-96 overflow-y-auto pr-2">
+                    <!-- Job list will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Spare Parts Modal -->
+        <div id="spare-parts-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-start justify-end p-4 z-40">
+            <div class="bg-white/80 backdrop-blur-sm rounded-lg p-6 shadow-xl w-full max-w-sm max-h-[85vh] flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-900">จัดการข้อมูลอะไหล่</h3>
+                    <div class="flex space-x-2">
+                        <!-- ปุ่มไอคอนสำหรับเพิ่มรายการ -->
+                        <button id="toggle-add-part-btn" title="เพิ่ม/แก้ไขอะไหล่" class="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded-md hover:bg-gray-300 transition-colors">
+                            เพิ่มรายการ
+                        </button>
+                        <!-- ปุ่มปิดหน้าต่าง -->
+                        <button id="close-spare-parts-modal" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <input type="search" id="spare-part-search" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="ค้นหาชื่ออะไหล่...">
+                </div>
+
+                <!-- ส่วนเพิ่ม/แก้ไขอะไหล่ (ซ่อนไว้เริ่มต้น) -->
+                <div id="add-part-form-container" class="hidden">
+                    <form id="spare-part-form" class="bg-gray-100 p-4 rounded-lg mb-4 flex flex-wrap items-end gap-4">
+                        <input type="hidden" id="spare-part-id">
+                        <div class="flex-grow">
+                            <label for="spare-part-name" class="block text-sm font-medium text-gray-700">ชื่ออะไหล่</label>
+                            <input type="text" id="spare-part-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                        </div>
+                        <div class="flex-grow">
+                            <label for="spare-part-price" class="block text-sm font-medium text-gray-700">ราคา</label>
+                            <input type="number" id="spare-part-price" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                        </div>
+                        <div class="flex space-x-2">
+                            <button type="submit" id="spare-part-submit-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">เพิ่มอะไหล่</button>
+                            <button type="button" id="spare-part-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 hidden">ยกเลิก</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="flex-grow overflow-y-auto pr-2">
+                    <ul id="spare-parts-list-container" class="space-y-2">
+                        <!-- Spare parts list will be populated here -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Buttons Container -->
+        <div id="floating-btn-container" class="fixed bottom-6 right-6 flex flex-col items-center space-y-4" style="z-index: 100;">
+            <button id="sticky-parts-btn" title="จัดการข้อมูลอะไหล่" class="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition ease-in-out duration-150">
+                <!-- ไอคอนแว่นขยายสำหรับการค้นหา -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </button>
+        </div>
+    </div>
+    
+    <div class="toast-container" id="toast-container"></div>
+    
+    <script>
+        // --- GLOBAL VARIABLES ---
+        const api = {
+            url: "https://script.google.com/macros/s/AKfycbwyfuHzrvujcmngljwVwmMgRpEH8Xs8f7Izga5Tueji9ue0QvhO2JJLQ1DDWf_5HMeaQg/exec",
+            sheetId: "1YlVr84ymT8iIKM03GYufNLFfNp37XSMbZMpPjdukWSs"
+        };
+        const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+        let allJobs = [];
+        let allSpareParts = [];
+        let deleteCallback = null; // To handle different delete types
+
+        // --- UI ELEMENTS ---
+        const loginContainer = document.getElementById('login-container');
+        const mainAppContainer = document.getElementById('main-app');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        const historyMonthSelect = document.getElementById('history-month');
+        const historyYearSelect = document.getElementById('history-year');
+        const jobsList = document.getElementById('jobs-list');
+        const summaryContainer = document.getElementById('summary-container');
+        const jobCountSummary = document.getElementById('job-count-summary');
+        const checkAllJobs = document.getElementById('check-all-jobs');
+        const repairForm = document.getElementById('repair-form');
+        const customerNameInput = document.getElementById('customer-name');
+        const deviceSelect = document.getElementById('device-select');
+        const revenueSelect = document.getElementById('revenue-select');
+        const revenueInput = document.getElementById('revenue');
+        const costSelect = document.getElementById('cost-select');
+        const costInput = document.getElementById('cost');
+        const dateDaySelect = document.getElementById('repair-date-day');
+        const dateMonthSelect = document.getElementById('repair-date-month');
+        const dateYearSelect = document.getElementById('repair-date-year');
+        const submitButton = document.getElementById('submit-button');
+        const cancelButton = document.getElementById('cancel-button');
+        const confirmModal = document.getElementById('confirm-modal');
+        const confirmDeleteBtn = document.getElementById('confirm-delete');
+        const confirmCancelBtn = document.getElementById('confirm-cancel');
+        const manageNotesModal = document.getElementById('manage-notes-modal');
+        const closeManageNotesModalBtn = document.getElementById('close-manage-notes-modal');
+        const newNoteInputModal = document.getElementById('new-note-input-modal');
+        const saveNoteButton = document.getElementById('save-note-button');
+        const notesListContainer = document.getElementById('notes-list-container');
+        const noteJobsModal = document.getElementById('note-jobs-modal');
+        const noteJobsModalTitle = document.getElementById('note-jobs-modal-title');
+        const noteJobsModalList = document.getElementById('note-jobs-modal-list');
+        const closeNoteJobsModalBtn = document.getElementById('close-note-jobs-modal');
+        const stickyPartsBtn = document.getElementById('sticky-parts-btn');
+        const sparePartsModal = document.getElementById('spare-parts-modal');
+        const closeSparePartsModalBtn = document.getElementById('close-spare-parts-modal');
+        const sparePartSearch = document.getElementById('spare-part-search');
+        const sparePartsListContainer = document.getElementById('spare-parts-list-container');
+        const toggleAddPartBtn = document.getElementById('toggle-add-part-btn');
+        const addPartFormContainer = document.getElementById('add-part-form-container');
+        const sparePartForm = document.getElementById('spare-part-form');
+        const sparePartIdInput = document.getElementById('spare-part-id');
+        const sparePartNameInput = document.getElementById('spare-part-name');
+        const sparePartPriceInput = document.getElementById('spare-part-price');
+        const sparePartSubmitBtn = document.getElementById('spare-part-submit-btn');
+        const sparePartCancelBtn = document.getElementById('spare-part-cancel-btn');
+
+
+        // --- UTILITY FUNCTIONS ---
+        function showToast(message, type = 'success') {
+            const toastContainer = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            let bgColor = 'bg-gray-800';
+            if (type === 'success') bgColor = 'bg-green-500';
+            else if (type === 'error') bgColor = 'bg-red-500';
+            toast.className = `toast p-4 mb-2 text-white rounded-lg shadow-md ${bgColor} transform translate-y-full opacity-0`;
+            toast.textContent = message;
+            toastContainer.appendChild(toast);
+            setTimeout(() => { toast.style.transform = 'translateY(0)'; toast.style.opacity = '1'; }, 10);
+            setTimeout(() => { toast.style.transform = 'translateY(1rem)'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        function callApi(action, data = {}, callbackName) {
+            const oldScript = document.getElementById(callbackName);
+            if (oldScript) oldScript.remove();
+            const script = document.createElement('script');
+            script.id = callbackName;
+            let params = `?action=${action}&callback=${callbackName}`;
+            for (const key in data) {
+                if (data.hasOwnProperty(key)) {
+                    params += `&${key}=${encodeURIComponent(typeof data[key] === 'object' ? JSON.stringify(data[key]) : data[key])}`;
+                }
+            }
+            script.src = `${api.url}${params}`;
+            script.onerror = () => { showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error'); script.remove(); };
+            document.body.appendChild(script);
+        }
+
+        window.handleGenericResponse = (result) => {
+            if (result.status === 'error') {
+                console.error("API Error:", result.message);
+                showToast(`เกิดข้อผิดพลาด: ${result.message}`, 'error');
+            }
+            document.getElementById('handleGenericResponse')?.remove();
+        };
+
+        // --- API & DATA FUNCTIONS ---
+        function fetchAllData() {
+            fetchJobs();
+            fetchNotes();
+            fetchSpareParts();
+        }
+
+        function fetchJobs() {
+            window.handleRepairs = res => {
+                if (res.status === 'success') { allJobs = res.data; filterAndRenderJobs(); } 
+                else { showToast(res.message, 'error'); }
+                document.getElementById('handleRepairs')?.remove();
+            };
+            callApi('get_repairs', {}, 'handleRepairs');
+        }
+        function saveJob(jobData) {
+            window.handleSave = res => {
+                if (res.status === 'success') {
+                    allJobs.push({ ...jobData, id: res.id, createdAt: Date.now(), isChecked: false });
+                    filterAndRenderJobs();
+                    showToast('บันทึกรายการสำเร็จ', 'success');
+                    
+                    // Partial reset for continuous entry
+                    customerNameInput.value = '';
+                    revenueSelect.value = 'pending';
+                    revenueInput.style.display = 'none';
+                    revenueInput.value = '';
+                    costSelect.value = 'pending';
+                    costInput.style.display = 'none';
+                    costInput.value = '';
+                    customerNameInput.focus();
+                } else { showToast(res.message, 'error'); }
+                document.getElementById('handleSave')?.remove();
+            };
+            callApi('save_repair', { data: jobData }, 'handleSave');
+        }
+        function updateJob(jobId, jobData) {
+            const jobIndex = allJobs.findIndex(j => j.id === jobId);
+            if (jobIndex !== -1) {
+                const isDateChanged = jobData.date && jobData.date !== allJobs[jobIndex].date;
+                allJobs[jobIndex] = { ...allJobs[jobIndex], ...jobData };
+                if(isDateChanged) { fetchJobs(); } 
+                else { filterAndRenderJobs(); }
+                callApi('update_repair', { id: jobId, data: jobData }, 'handleGenericResponse');
+            }
+        }
+        function deleteJob(jobId) {
+            allJobs = allJobs.filter(j => j.id !== jobId);
+            filterAndRenderJobs();
+            callApi('delete_repair', { id: jobId }, 'handleGenericResponse');
+            showToast('ลบรายการสำเร็จ', 'success');
+        }
+        function getRepairById(id, callback) {
+            window.handleGetJob = res => {
+                if (res.status === 'success') callback(res.data);
+                else { showToast('ไม่พบข้อมูลงานซ่อม', 'error'); callback(null); }
+                document.getElementById('handleGetJob')?.remove();
+            };
+            callApi('get_repair_by_id', { id: id }, 'handleGetJob');
+        }
+        function updateCheckStatus(jobId, isChecked) {
+            callApi('update_check_status', { data: { id: jobId, isChecked } }, 'handleGenericResponse');
+        }
+        function updateAllCheckStatus(isChecked) {
+            const visibleJobIds = Array.from(jobsList.querySelectorAll('tr[data-id]')).map(tr => tr.dataset.id);
+            if (visibleJobIds.length > 0) {
+                callApi('update_all_check_status', { data: { ids: visibleJobIds, isChecked } }, 'handleGenericResponse');
+            }
+        }
+        
+        function fetchNotes() {
+            window.handleNotes = res => {
+                if (res.status === 'success') { renderNotesSelect(res.data); renderNotesManagementList(res.data); } 
+                else { showToast(res.message, 'error'); }
+                document.getElementById('handleNotes')?.remove();
+            };
+            callApi('get_notes', {}, 'handleNotes');
+        }
+        function saveNote(newNote) {
+            window.handleSaveNote = res => {
+                if (res.status === 'success') { fetchNotes(); showToast('บันทึกหมายเหตุสำเร็จ', 'success'); }
+                else { showToast(res.message, 'error'); }
+                document.getElementById('handleSaveNote')?.remove();
+            };
+            callApi('save_note', { note: newNote }, 'handleSaveNote');
+        }
+        function deleteNote(note) {
+            window.handleDeleteNote = res => {
+                if (res.status === 'success') { fetchNotes(); showToast('ลบหมายเหตุสำเร็จ', 'success'); }
+                else { showToast(res.message, 'error'); }
+                document.getElementById('handleDeleteNote')?.remove();
+            };
+            callApi('delete_note', { note: note }, 'handleDeleteNote');
+        }
+        
+        function fetchSpareParts() {
+            window.handleGetParts = res => {
+                if (res.status === 'success') { allSpareParts = res.data; renderSparePartsList(); }
+                else { showToast(res.message, 'error'); }
+                document.getElementById('handleGetParts')?.remove();
+            };
+            callApi('get_spare_parts', {}, 'handleGetParts');
+        }
+        function saveSparePart(partData) {
+            window.handleSavePart = res => {
+                if (res.status === 'success') {
+                    const savedPart = res.data;
+                    const index = allSpareParts.findIndex(p => p.id === savedPart.id);
+                    if (index !== -1) allSpareParts[index] = savedPart;
+                    else allSpareParts.push(savedPart);
+                    renderSparePartsList();
+                    resetSparePartForm();
+                    showToast('บันทึกข้อมูลอะไหล่สำเร็จ', 'success');
+                } else { showToast(res.message, 'error'); }
+                document.getElementById('handleSavePart')?.remove();
+            };
+            callApi('save_spare_part', { data: partData }, 'handleSavePart');
+        }
+        function deleteSparePart(partId) {
+            allSpareParts = allSpareParts.filter(p => p.id !== partId);
+            renderSparePartsList();
+            callApi('delete_spare_part', { id: partId }, 'handleGenericResponse');
+            showToast('ลบอะไหล่สำเร็จ', 'success');
+        }
+        
+        // --- UI & RENDER FUNCTIONS ---
+        function populateDateDropdowns() {
+            const today = new Date();
+            const currentDay = today.getDate(), currentMonth = today.getMonth() + 1, currentYear = today.getFullYear();
+            dateDaySelect.innerHTML = Array.from({length: 31}, (_, i) => `<option value="${String(i+1).padStart(2,'0')}" ${i+1 === currentDay ? 'selected' : ''}>${i+1}</option>`).join('');
+            dateMonthSelect.innerHTML = thaiMonths.map((m, i) => `<option value="${String(i+1).padStart(2,'0')}" ${i+1 === currentMonth ? 'selected' : ''}>${m}</option>`).join('');
+            const thaiYear = currentYear + 543;
+            dateYearSelect.innerHTML = Array.from({length: 11}, (_, i) => `<option value="${thaiYear - 5 + i - 543}" ${thaiYear - 5 + i === thaiYear ? 'selected' : ''}>${thaiYear - 5 + i}</option>`).join('');
+        }
+        function populateHistoryDropdowns() {
+            const today = new Date();
+            const currentMonth = today.getMonth() + 1, currentYear = today.getFullYear();
+            historyMonthSelect.innerHTML = '<option value="">ทั้งหมด</option>' + thaiMonths.map((m, i) => `<option value="${String(i+1).padStart(2,'0')}" ${i+1 === currentMonth ? 'selected' : ''}>${m}</option>`).join('');
+            const thaiYear = currentYear + 543;
+            historyYearSelect.innerHTML = '<option value="">ทั้งหมด</option>' + Array.from({length: 6}, (_, i) => `<option value="${thaiYear - i - 543}" ${thaiYear - i === thaiYear ? 'selected' : ''}>${thaiYear - i}</option>`).join('');
+        }
+        
+        function filterAndRenderJobs() {
+            const scrollY = window.scrollY;
+            const filteredJobs = getCurrentlyFilteredJobs();
+
+            const grouped = filteredJobs.reduce((acc, job) => { (acc[job.date] = acc[job.date] || []).push(job); return acc; }, {});
+            const sorted = Object.keys(grouped).sort().flatMap(date => grouped[date].sort((a,b) => a.createdAt - b.createdAt).map((job, i) => ({...job, item_no: i + 1})));
+            
+            renderJobs(sorted);
+            updateSummary();
+            renderJobCounts(sorted);
+            window.scrollTo({ top: scrollY, behavior: 'auto' });
+        }
+        function renderJobs(jobs) {
+            jobsList.innerHTML = '';
+            if (!jobs || jobs.length === 0) {
+                jobsList.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">ไม่มีรายการ</td></tr>`;
+                updateCheckAllState();
+                return;
+            }
+            let currentDay = null;
+            jobs.forEach(job => {
+                let dateObj = new Date(job.date);
+                const dateStr = dateObj.toISOString().split('T')[0];
+                if (dateStr !== currentDay && currentDay !== null) {
+                    jobsList.insertAdjacentHTML('beforeend', `<tr><td colspan="7"><hr class="my-4 border-t-2 border-blue-400"></td></tr>`);
+                }
+                const row = jobsList.insertRow();
+                row.dataset.id = job.id;
+                const isRefund = job.revenue === 'claim' || job.revenue === 'refund' || (typeof job.revenue === 'number' && job.revenue < 0);
+                row.className = isRefund ? 'bg-red-100' : (job.isChecked ? 'bg-green-50' : '');
+                
+                let revenueHTML = '', costHTML = '';
+                if (job.revenue === 'claim') {
+                    revenueHTML = `<span class="text-red-600 font-medium">งานเคลม</span>`;
+                } else if (job.revenue === 'refund' || (typeof job.revenue === 'number' && job.revenue < 0)) {
+                    const refundAmount = typeof job.revenue === 'number' ? Math.abs(job.revenue).toLocaleString() : '';
+                    revenueHTML = `<span class="text-red-600 font-medium">คืนเงิน ${refundAmount}</span>`;
+                } else if (typeof job.revenue === 'number') {
+                    revenueHTML = `<span class="text-green-600">${job.revenue.toLocaleString()}</span>`;
+                } else {
+                    revenueHTML = `<span class="text-yellow-500 font-medium">รอดำเนินการ</span>`;
+                }
+
+                if (typeof job.cost === 'number') costHTML = `<span class="text-red-600">${job.cost.toLocaleString()}</span>`;
+                else if (job.cost === 'no_cost') costHTML = `<span class="text-gray-500">-</span>`;
+                else costHTML = `<span class="text-yellow-500 font-medium">รอดำเนินการ</span>`;
+                
+                row.innerHTML = `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${dateObj.toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'})}</td><td class="px-6 py-4 text-sm text-gray-500">${job.item_no}</td><td class="px-6 py-4 text-sm font-medium text-gray-900 inline-editable cursor-pointer" data-field="customerName">${job.customerName}</td><td class="px-6 py-4 text-sm text-gray-500 inline-editable cursor-pointer" data-field="device">${job.device}</td><td class="px-6 py-4 text-sm text-center inline-editable cursor-pointer" data-field="revenue">${revenueHTML}</td><td class="px-6 py-4 text-sm text-center inline-editable cursor-pointer" data-field="cost">${costHTML}</td><td class="px-6 py-4 text-left text-sm font-medium flex items-center space-x-4"><input type="checkbox" data-id="${job.id}" class="job-checkbox h-4 w-4 text-blue-600" ${job.isChecked ? 'checked' : ''}><button class="ml-6 text-red-600 hover:text-red-900" onclick="showDeleteModal(event, 'job', '${job.id}')">ลบ</button></td>`;
+                currentDay = dateStr;
+            });
+            document.querySelectorAll('.job-checkbox').forEach(cb => cb.addEventListener('change', handleJobCheckboxChange));
+            updateCheckAllState();
+        }
+        function updateCheckAllState() {
+            const checkboxes = document.querySelectorAll('#jobs-list .job-checkbox');
+            const total = checkboxes.length;
+            if (total === 0) { checkAllJobs.checked = false; checkAllJobs.indeterminate = false; return; }
+            const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+            checkAllJobs.checked = checkedCount === total;
+            checkAllJobs.indeterminate = checkedCount > 0 && checkedCount < total;
+        }
+        function handleJobCheckboxChange(e) {
+            const isChecked = e.target.checked, jobId = e.target.dataset.id, row = e.target.closest('tr');
+            const job = allJobs.find(j => j.id === jobId);
+            if (job) job.isChecked = isChecked;
+            const isRefund = job.revenue === 'claim' || job.revenue === 'refund' || (typeof job.revenue === 'number' && job.revenue < 0);
+            if (!isRefund) row.classList.toggle('bg-green-50', isChecked);
+            updateSummary();
+            updateCheckStatus(jobId, isChecked);
+            updateCheckAllState();
+        }
+        
+        function getCurrentlyFilteredJobs() {
+            const selectedMonth = historyMonthSelect.value;
+            const selectedYear = historyYearSelect.value;
+            
+            let jobs = allJobs.filter(j => j && j.date); 
+
+            if (selectedYear) {
+                jobs = jobs.filter(j => new Date(j.date).getFullYear() == selectedYear);
+            }
+            if (selectedMonth) {
+                jobs = jobs.filter(j => (new Date(j.date).getMonth() + 1) == selectedMonth);
+            }
+            return jobs;
+        }
+        
+        function renderJobCounts(jobs) { jobCountSummary.innerHTML = `<div class="p-4 rounded-lg bg-blue-100 text-blue-700 font-semibold"><p class="text-sm">รวมจำนวนรายการทั้งหมด</p><p class="text-2xl mt-1">${jobs.length} รายการ</p></div>`; }
+        function updateSummary() {
+            // 1. ดึงรายการทั้งหมดที่ตรงกับตัวกรอง เดือน/ปี ที่เลือก
+            const currentlyVisibleJobs = getCurrentlyFilteredJobs();
+
+            // 2. จากรายการที่กรองแล้ว, เลือกเฉพาะรายการที่ถูกติ๊กเช็คบ็อก
+            const jobsForSummary = currentlyVisibleJobs.filter(job => job.isChecked);
+
+            // 3. แสดงผลสรุปจากข้อมูลสุดท้ายที่ถูกต้อง
+            renderSummary(jobsForSummary);
+        }
+        function renderSummary(jobs) {
+            summaryContainer.innerHTML = ''; // Clear previous summary
+            
+            // If no jobs are checked for the summary, display a message.
+            if (jobs.length === 0) {
+                summaryContainer.innerHTML = '<p class="text-center text-gray-500">กรุณาเลือกรายการเพื่อดูสรุป</p>';
+                return;
+            }
+
+            const summary = { totalRevenue: 0, totalCost: 0, notes: {} };
+            
+            jobs.forEach(job => {
+                const note = job.device;
+                if (!summary.notes[note]) {
+                    summary.notes[note] = { count: 0, revenue: 0, cost: 0, refundCount: 0 };
+                }
+                summary.notes[note].count++;
+                
+                const isNonContributingRevenue = job.revenue === 'refund' || job.revenue === 'claim' || (typeof job.revenue === 'number' && job.revenue < 0);
+
+                // ต้นทุนจะถูกนับรวมเสมอ ไม่ว่าจะเป็นรายการประเภทใด
+                const cost = typeof job.cost === 'number' ? job.cost : 0;
+                summary.totalCost += cost;
+                summary.notes[note].cost += cost;
+
+                if (isNonContributingRevenue) {
+                    // สำหรับงานคืนเงินและเคลม จะไม่นับรายรับ แต่นับจำนวน
+                    if (job.revenue !== 'claim') {
+                        summary.notes[note].refundCount++;
+                    }
+                } else {
+                    // สำหรับงานปกติ จะนับรวมรายรับ
+                    const revenue = typeof job.revenue === 'number' ? job.revenue : 0;
+                    summary.totalRevenue += revenue;
+                    summary.notes[note].revenue += revenue;
+                }
+            });
+
+            // Determine the title based on the filter
+            const selectedMonth = historyMonthSelect.value;
+            const selectedYear = historyYearSelect.value;
+            let title = '';
+
+            if (selectedMonth && selectedYear) {
+                const monthName = thaiMonths[parseInt(selectedMonth) - 1];
+                const thaiYear = parseInt(selectedYear) + 543;
+                title = `${monthName} ${thaiYear}`;
+            } else if (selectedYear) {
+                const thaiYear = parseInt(selectedYear) + 543;
+                title = `ปี ${thaiYear}`;
+            } else {
+                title = 'สรุปทั้งหมด (ตามที่เลือก)';
+            }
+
+            const totalProfit = summary.totalRevenue - summary.totalCost;
+            const summaryDiv = document.createElement('div');
+            summaryDiv.className = 'bg-gray-50 p-4 rounded-lg shadow-inner';
+
+            const notesHtml = Object.keys(summary.notes).sort((a,b) => summary.notes[b].count - summary.notes[a].count).map(note => {
+                const ns = summary.notes[note];
+                const profit = ns.revenue - ns.cost;
+                const countText = ns.refundCount > 0 ? `(${ns.count} รายการ, คืนเงิน ${ns.refundCount})` : `(${ns.count} รายการ)`;
+
+                return `<li class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-2 rounded-md bg-white border"><span class="font-semibold text-lg text-gray-900 cursor-pointer hover:text-blue-600 hover:underline note-summary-item" data-note="${note}">${note}</span><div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm mt-1 sm:mt-0"><span class="text-gray-600">${countText}</span><span class="text-green-600">รับ: ${ns.revenue.toLocaleString()}</span><span class="text-red-600">ทุน: ${ns.cost.toLocaleString()}</span><span class="${profit >= 0 ? 'text-blue-600':'text-red-600'}">กำไร: ${profit.toLocaleString()}</span></div></li>`;
+            }).join('');
+
+            summaryDiv.innerHTML = `
+                <h3 class="text-xl font-bold mb-2 text-gray-800">${title}</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center text-lg font-semibold mb-4">
+                    <div class="p-3 rounded-lg bg-green-100 text-green-700">รับรวม: ${summary.totalRevenue.toLocaleString()}</div>
+                    <div class="p-3 rounded-lg bg-red-100 text-red-700">ทุนรวม: ${summary.totalCost.toLocaleString()}</div>
+                    <div class="p-3 rounded-lg ${totalProfit >= 0 ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}">กำไร: ${totalProfit.toLocaleString()}</div>
+                </div>
+                <h4 class="text-base font-semibold mb-2 text-gray-700">สรุปตามหมายเหตุ:</h4>
+                <ul class="space-y-2">${notesHtml}</ul>
+            `;
+            
+            summaryContainer.appendChild(summaryDiv);
+        }
+        
+        function renderNotesSelect(notes) {
+            const val = deviceSelect.value;
+            deviceSelect.innerHTML = '<option value="งานหน้าร้าน">งานหน้าร้าน</option>' + [...new Set(notes.map(n => n.note))].sort().filter(n => n !== 'งานหน้าร้าน').map(n => `<option value="${n}">${n}</option>`).join('');
+            deviceSelect.value = val || 'งานหน้าร้าน';
+        }
+        function renderNotesManagementList(notes) {
+            notesListContainer.innerHTML = notes.map(note => `<li class="flex items-center justify-between p-2 rounded-md bg-white border"><span>${note.note}</span><button class="px-2 py-1 bg-red-500 text-white rounded-md text-xs hover:bg-red-600 ${note.note === 'งานหน้าร้าน' ? 'opacity-50 cursor-not-allowed':''}" ${note.note === 'งานหน้าร้าน' ? 'disabled':''} onclick="deleteNote('${note.note}')">ลบ</button></li>`).join('');
+        }
+        
+        function renderSparePartsList() {
+            const searchTerm = sparePartSearch.value.toLowerCase().trim();
+            let filteredParts = [];
+
+            if (searchTerm === '') {
+                 sparePartsListContainer.innerHTML = '<li><p class="text-center text-gray-500 p-4">กรุณาพิมพ์เพื่อค้นหาอะไหล่</p></li>';
+                 return;
+            } else {
+                const searchKeywords = searchTerm.split(/\s+/).filter(k => k); // Split by space and remove empty strings
+                if (searchKeywords.length > 0) {
+                    filteredParts = allSpareParts.filter(part => {
+                        const partNameLower = part.partName.toLowerCase();
+                        return searchKeywords.every(keyword => partNameLower.includes(keyword));
+                    });
+                }
+            }
+            
+            if (filteredParts.length === 0) {
+                sparePartsListContainer.innerHTML = '<li><p class="text-center text-gray-500 p-4">ไม่พบอะไหล่ที่ค้นหา</p></li>';
+                return;
+            }
+
+            sparePartsListContainer.innerHTML = filteredParts.sort((a,b) => a.partName.localeCompare(b.partName)).map(part => {
+                const updatedDate = new Date(part.lastUpdated).toLocaleDateString('th-TH', { year: '2-digit', month: 'short', day: 'numeric', hour:'2-digit', minute:'2-digit' });
+                return `<li class="flex items-center justify-between p-3 bg-gray-50 rounded-md border"><div><p class="font-semibold text-gray-800">${part.partName}</p><p class="text-sm text-gray-500">อัปเดต: ${updatedDate}</p></div><div class="flex items-center space-x-4"><p class="text-lg font-semibold text-blue-600">${Number(part.price).toLocaleString()} บาท</p><button class="text-yellow-500 hover:text-yellow-700" onclick="editSparePart('${part.id}')">แก้ไข</button><button class="text-red-500 hover:text-red-700" onclick="showDeleteModal(event, 'part', '${part.id}')">ลบ</button></div></li>`;
+            }).join('');
+        }
+        
+        function editSparePart(partId) {
+            const part = allSpareParts.find(p => p.id === partId);
+            if (part) {
+                addPartFormContainer.classList.remove('hidden');
+                sparePartIdInput.value = part.id;
+                sparePartNameInput.value = part.partName;
+                sparePartPriceInput.value = part.price;
+                sparePartSubmitBtn.textContent = 'อัปเดต';
+                sparePartCancelBtn.classList.remove('hidden');
+                sparePartNameInput.focus();
+            }
+        }
+        
+        function resetSparePartForm(){
+            sparePartForm.reset();
+            sparePartIdInput.value = '';
+            sparePartSubmitBtn.textContent = 'เพิ่มอะไหล่';
+            sparePartCancelBtn.classList.add('hidden');
+            addPartFormContainer.classList.add('hidden');
+        }
+
+        // --- EVENT LISTENERS & INITIALIZATION ---
+        function initializeApp() {
+            populateDateDropdowns();
+            populateHistoryDropdowns();
+            fetchAllData();
+            jobsList.addEventListener('click', handleCellClick);
+            summaryContainer.addEventListener('click', handleNoteSummaryClick);
+            document.getElementById('sticky-parts-btn').addEventListener('click', () => { sparePartsModal.style.display = 'flex'; });
+
+            revenueSelect.addEventListener('change', (e) => {
+                revenueInput.style.display = e.target.value === 'number' ? 'block' : 'none';
+                if (e.target.value === 'number') revenueInput.focus();
+            });
+            costSelect.addEventListener('change', (e) => {
+                costInput.style.display = e.target.value === 'number' ? 'block' : 'none';
+                if (e.target.value === 'number') costInput.focus();
+            });
+            
+            sparePartSearch.addEventListener('input', renderSparePartsList);
+            toggleAddPartBtn.addEventListener('click', () => {
+                addPartFormContainer.classList.toggle('hidden');
+            });
+            sparePartForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const partData = { id: sparePartIdInput.value || null, partName: sparePartNameInput.value.trim(), price: parseFloat(sparePartPriceInput.value) || 0 };
+                if(!partData.partName || !partData.price) { showToast('กรุณากรอกชื่อและราคาอะไหล่', 'error'); return; }
+                saveSparePart(partData);
+            });
+            sparePartCancelBtn.addEventListener('click', resetSparePartForm);
+
+            repairForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const dateToSave = `${dateYearSelect.value}-${dateMonthSelect.value}-${dateDaySelect.value}`;
+                const jobData = { customerName: customerNameInput.value, device: deviceSelect.value, revenue: revenueSelect.value === 'number' ? parseFloat(revenueInput.value) || 0 : revenueSelect.value, cost: costSelect.value === 'number' ? parseFloat(costInput.value) || 0 : costSelect.value, date: dateToSave };
+                if (repairForm.repairId.value) {
+                    updateJob(repairForm.repairId.value, jobData);
+                    repairForm.reset();
+                } else {
+                    saveJob(jobData);
+                }
+            });
+            cancelButton.addEventListener('click', () => { repairForm.reset(); });
+            repairForm.addEventListener('reset', () => {
+                repairForm.repairId.value = '';
+                submitButton.textContent = 'บันทึก';
+                cancelButton.style.display = 'none';
+                revenueInput.style.display = 'none';
+                costInput.style.display = 'none';
+                populateDateDropdowns();
+            });
+
+            confirmDeleteBtn.addEventListener('click', () => {
+                if (deleteCallback) deleteCallback();
+                confirmModal.style.display = 'none';
+            });
+            confirmCancelBtn.addEventListener('click', () => { confirmModal.style.display = 'none'; });
+
+            document.getElementById('manage-notes-btn').addEventListener('click', () => { manageNotesModal.style.display = 'flex'; });
+            closeManageNotesModalBtn.addEventListener('click', () => { manageNotesModal.style.display = 'none'; });
+            saveNoteButton.addEventListener('click', () => {
+                const newNote = newNoteInputModal.value.trim();
+                if (newNote) { saveNote(newNote); newNoteInputModal.value = ''; }
+                else { showToast('กรุณาพิมพ์หมายเหตุ', 'error'); }
+            });
+
+            closeNoteJobsModalBtn.addEventListener('click', () => { noteJobsModal.style.display = 'none'; });
+            closeSparePartsModalBtn.addEventListener('click', () => { sparePartsModal.style.display = 'none'; });
+
+            historyMonthSelect.addEventListener('change', filterAndRenderJobs);
+            historyYearSelect.addEventListener('change', filterAndRenderJobs);
+            checkAllJobs.addEventListener('change', (e) => {
+                const isChecked = e.target.checked;
+                
+                const visibleRows = document.querySelectorAll('#jobs-list tr[data-id]');
+
+                visibleRows.forEach(row => {
+                    const jobId = row.dataset.id;
+                    
+                    const job = allJobs.find(j => j.id === jobId);
+                    if (job) {
+                        job.isChecked = isChecked;
+                        
+                        const cb = row.querySelector('.job-checkbox');
+                        if (cb) cb.checked = isChecked;
+                        
+                        const isRefund = job.revenue === 'claim' || job.revenue === 'refund' || (typeof job.revenue === 'number' && job.revenue < 0);
+                        if (!isRefund) {
+                            row.classList.toggle('bg-green-50', isChecked);
+                        }
+                    }
+                });
+                updateAllCheckStatus(isChecked);
+                updateSummary();
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = e.target.username.value;
+                const password = e.target.password.value;
+
+                const isTong = username === 'tong' && password === '0851044777';
+                const isAuy = username === 'auy' && password === '0880811899';
+
+                if (isTong || isAuy) {
+                    loginError.classList.add('hidden');
+                    loginContainer.classList.add('hidden');
+                    mainAppContainer.classList.remove('hidden');
+                    initializeApp();
+                } else {
+                    loginError.classList.remove('hidden');
+                }
+            });
+        });
+
+        function showDeleteModal(event, type, id) {
+            event.stopPropagation();
+            const confirmTitle = document.getElementById('confirm-title');
+            const confirmMessage = document.getElementById('confirm-message');
+            if (type === 'job') {
+                confirmTitle.textContent = 'ยืนยันการลบงานซ่อม';
+                confirmMessage.textContent = 'คุณแน่ใจหรือไม่ว่าต้องการลบรายการงานซ่อมนี้?';
+                deleteCallback = () => deleteJob(id);
+            } else if (type === 'part') {
+                confirmTitle.textContent = 'ยืนยันการลบอะไหล่';
+                confirmMessage.textContent = `คุณแน่ใจหรือไม่ว่าต้องการลบอะไหล่ชิ้นนี้?`;
+                deleteCallback = () => deleteSparePart(id);
+            }
+            confirmModal.style.display = 'flex';
+        }
+
+        function editJob(id) {
+            getRepairById(id, (data) => {
+                if(data) {
+                    repairForm.repairId.value = id;
+                    customerNameInput.value = data.customerName;
+                    deviceSelect.value = data.device;
+                    const [year, month, day] = data.date.split('-');
+                    dateYearSelect.value = year; dateMonthSelect.value = month; dateDaySelect.value = day;
+                    if (['pending', 'claim', 'refund'].includes(data.revenue)) {
+                        revenueSelect.value = data.revenue; revenueInput.style.display = 'none';
+                    } else {
+                        revenueSelect.value = 'number'; revenueInput.style.display = 'block'; revenueInput.value = data.revenue;
+                    }
+                    if (['pending', 'no_cost'].includes(data.cost)) {
+                        costSelect.value = data.cost; costInput.style.display = 'none';
+                    } else {
+                        costSelect.value = 'number'; costInput.style.display = 'block'; costInput.value = data.cost;
+                    }
+                    submitButton.textContent = 'อัปเดต';
+                    cancelButton.style.display = 'inline-flex';
+                }
+            });
+        }
+        
+        function handleCellClick(e) {
+            const cell = e.target.closest('td.inline-editable');
+            if (!cell || cell.querySelector('input') || cell.querySelector('select')) return;
+        
+            const field = cell.dataset.field;
+            const row = cell.closest('tr');
+            const jobId = row.dataset.id;
+            const job = allJobs.find(j => j.id === jobId);
+            if (!job) return;
+        
+            const originalContent = cell.innerHTML;
+            const originalValue = job[field];
+        
+            const cellWidth = cell.getBoundingClientRect().width;
+            cell.style.width = `${cellWidth}px`;
+            cell.style.padding = '0';
+        
+            let editorElement;
+        
+            if (field === 'device') {
+                const select = document.createElement('select');
+                select.className = 'w-full h-full p-2 border-2 border-blue-400 rounded focus:outline-none bg-yellow-50 text-sm';
+                Array.from(deviceSelect.options).forEach(opt => {
+                    const newOpt = new Option(opt.text, opt.value);
+                    select.add(newOpt);
+                });
+                select.value = originalValue;
+                editorElement = select;
+            } else {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'w-full h-full p-2 border-2 border-blue-400 rounded focus:outline-none bg-yellow-50 text-sm';
+                
+                if (field === 'revenue' || field === 'cost') {
+                    input.classList.add('text-center');
+                }
+
+                if ((field === 'revenue' || field === 'cost') && originalValue === 'pending') {
+                    input.value = '';
+                    input.placeholder = 'กรอกตัวเลข';
+                } else if (typeof originalValue === 'number') {
+                    input.value = originalValue;
+                } else if (originalValue === 'claim') {
+                    input.value = 'งานเคลม';
+                } else if (originalValue === 'refund') {
+                    input.value = 'คืนเงิน';
+                } else if (originalValue === 'no_cost') {
+                    input.value = '-';
+                } else {
+                    input.value = originalValue || '';
+                }
+                editorElement = input;
+            }
+
+            cell.innerHTML = '';
+            cell.appendChild(editorElement);
+            editorElement.focus();
+        
+            const cleanupAndRestore = (content) => {
+                cell.style.width = '';
+                cell.style.padding = '';
+                cell.innerHTML = content;
+            };
+
+            const saveChanges = (newValueStr) => {
+                let parsedValue;
+                const trimmedValue = newValueStr.trim();
+        
+                if (field === 'revenue' || field === 'cost') {
+                    if (trimmedValue === '') {
+                        parsedValue = 'pending';
+                    } else {
+                        const num = parseFloat(trimmedValue);
+                        if (!isNaN(num)) {
+                            parsedValue = num;
+                        } else if (trimmedValue.includes('เคลม')) {
+                            parsedValue = 'claim';
+                        } else if (trimmedValue.includes('คืน')) {
+                            parsedValue = 'refund';
+                        } else if (trimmedValue === '-' && field === 'cost') {
+                            parsedValue = 'no_cost';
+                        } else {
+                            parsedValue = 'pending';
+                        }
+                    }
+                } else {
+                    parsedValue = trimmedValue;
+                }
+                
+                if (parsedValue !== originalValue) {
+                    updateJob(jobId, { [field]: parsedValue });
+                } else {
+                    cleanupAndRestore(originalContent);
+                }
+            };
+        
+            const blurHandler = (e) => {
+                saveChanges(e.target.value);
+            };
+
+            editorElement.addEventListener('blur', blurHandler);
+            
+            editorElement.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    editorElement.blur();
+                } else if (e.key === 'Escape') {
+                    editorElement.removeEventListener('blur', blurHandler);
+                    cleanupAndRestore(originalContent);
+                }
+            });
+        }
+
+        function handleNoteSummaryClick(e) {
+            const noteItem = e.target.closest('.note-summary-item');
+            if (noteItem) {
+                const note = noteItem.dataset.note;
+                showNoteJobsModal(note);
+            }
+        }
+
+        function showNoteJobsModal(note) {
+            const selectedMonth = historyMonthSelect.value;
+            const selectedYear = historyYearSelect.value;
+
+            let jobsForNote = allJobs.filter(job => job.device === note);
+
+            if (selectedYear) {
+                jobsForNote = jobsForNote.filter(j => new Date(j.date).getFullYear() == selectedYear);
+            }
+            if (selectedMonth) {
+                jobsForNote = jobsForNote.filter(j => (new Date(j.date).getMonth() + 1) == selectedMonth);
+            }
+            
+            jobsForNote.sort((a,b) => a.createdAt - b.createdAt);
+            
+            let title = `รายการงานซ่อมสำหรับ "${note}"`;
+            if (selectedMonth && selectedYear) {
+                title += ` (${thaiMonths[parseInt(selectedMonth) - 1]} ${parseInt(selectedYear) + 543})`;
+            } else if (selectedYear) {
+                title += ` (ปี ${parseInt(selectedYear) + 543})`;
+            } else {
+                title += ` (ทั้งหมด)`;
+            }
+            noteJobsModalTitle.textContent = title;
+            noteJobsModalList.innerHTML = '';
+
+            if (jobsForNote.length === 0) {
+                noteJobsModalList.innerHTML = `<p class="text-center text-gray-500">ไม่พบรายการงานซ่อม</p>`;
+            } else {
+                jobsForNote.forEach(job => {
+                    const dateObj = new Date(job.date);
+                    const dateStr = dateObj.toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'});
+                    
+                    let revenueText = '';
+                    if (typeof job.revenue === 'number') {
+                        revenueText = `<span class="text-green-600">${job.revenue.toLocaleString()} บาท</span>`;
+                    } else if (job.revenue === 'pending') {
+                        revenueText = `<span class="text-yellow-500 font-medium">รอดำเนินการ</span>`;
+                    } else if (job.revenue === 'claim') {
+                        revenueText = `<span class="text-red-600 font-medium">งานเคลม</span>`;
+                    } else if (job.revenue === 'refund') {
+                        revenueText = `<span class="text-red-600 font-medium">คืนเงิน</span>`;
+                    }
+
+                    const jobItem = document.createElement('div');
+                    jobItem.className = 'p-3 rounded-lg bg-gray-100 border border-gray-200';
+                    jobItem.innerHTML = `<p class="text-sm text-gray-500">${dateStr}</p>
+                                         <p class="text-base font-semibold text-gray-900">${job.customerName}</p>
+                                         <div class="mt-2 text-sm">
+                                             <p class="text-gray-600">รายรับ: ${revenueText}</p>
+                                             <p class="text-gray-600">ต้นทุน: <span class="text-red-600">${typeof job.cost === 'number' ? job.cost.toLocaleString() + ' บาท' : (job.cost === 'no_cost' ? '-' : 'รอดำเนินการ')}</span></p>
+                                         </div>`;
+                    noteJobsModalList.appendChild(jobItem);
+                });
+            }
+            noteJobsModal.style.display = 'flex';
+        }
+
+    </script>
+</body>
+</html>
+
+
+
+

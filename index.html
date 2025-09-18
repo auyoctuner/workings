@@ -557,7 +557,7 @@
                     revenueHTML = `<span class="text-red-600 font-medium">งานเคลม</span>`;
                 } else if (job.revenue === 'refund' || (typeof job.revenue === 'number' && job.revenue < 0)) {
                     const refundAmount = typeof job.revenue === 'number' ? Math.abs(job.revenue).toLocaleString() : '';
-                    revenueHTML = `<span class="text-red-600 font-medium">คืนเงิน ${refundAmount}</span>`;
+                    revenueHTML = `<span class="text-red-600 font-medium">คืนเงิน(${refundAmount})</span>`;
                 } else if (typeof job.revenue === 'number') {
                     revenueHTML = `<span class="text-green-600">${job.revenue.toLocaleString()}</span>`;
                 } else {
@@ -610,13 +610,10 @@
         
         function renderJobCounts(jobs) { jobCountSummary.innerHTML = `<div class="p-4 rounded-lg bg-blue-100 text-blue-700 font-semibold"><p class="text-sm">รวมจำนวนรายการทั้งหมด</p><p class="text-2xl mt-1">${jobs.length} รายการ</p></div>`; }
         function updateSummary() {
-            // 1. ดึงรายการทั้งหมดที่ตรงกับตัวกรอง เดือน/ปี ที่เลือก
-            const currentlyVisibleJobs = getCurrentlyFilteredJobs();
+            // ดึงรายการที่ตรงตามตัวกรอง (เดือน/ปี) และเฉพาะรายการที่ถูกติ๊ก "ตรวจสอบแล้ว" เท่านั้น
+            const jobsForSummary = getCurrentlyFilteredJobs().filter(job => job.isChecked);
 
-            // 2. จากรายการที่กรองแล้ว, เลือกเฉพาะรายการที่ถูกติ๊กเช็คบ็อก
-            const jobsForSummary = currentlyVisibleJobs.filter(job => job.isChecked);
-
-            // 3. แสดงผลสรุปจากข้อมูลสุดท้ายที่ถูกต้อง
+            // แสดงผลสรุปจากข้อมูลที่กรองแล้ว
             renderSummary(jobsForSummary);
         }
         function renderSummary(jobs) {
@@ -1055,9 +1052,12 @@
                 jobsForNote = jobsForNote.filter(j => (new Date(j.date).getMonth() + 1) == selectedMonth);
             }
             
+            // Filter for checked jobs only
+            jobsForNote = jobsForNote.filter(job => job.isChecked);
+
             jobsForNote.sort((a,b) => a.createdAt - b.createdAt);
             
-            let title = `รายการงานซ่อมสำหรับ "${note}"`;
+            let title = `รายการงานซ่อมสำหรับ "${note}" (เฉพาะที่ตรวจสอบแล้ว)`;
             if (selectedMonth && selectedYear) {
                 title += ` (${thaiMonths[parseInt(selectedMonth) - 1]} ${parseInt(selectedYear) + 543})`;
             } else if (selectedYear) {
@@ -1077,7 +1077,12 @@
                     
                     let revenueText = '';
                     if (typeof job.revenue === 'number') {
-                        revenueText = `<span class="text-green-600">${job.revenue.toLocaleString()} บาท</span>`;
+                        if (job.revenue < 0) {
+                            const amount = Math.abs(job.revenue).toLocaleString();
+                            revenueText = `<span class="text-red-600 font-medium">คืนเงิน(${amount})</span>`;
+                        } else {
+                            revenueText = `<span class="text-green-600">${job.revenue.toLocaleString()} บาท</span>`;
+                        }
                     } else if (job.revenue === 'pending') {
                         revenueText = `<span class="text-yellow-500 font-medium">รอดำเนินการ</span>`;
                     } else if (job.revenue === 'claim') {
@@ -1103,4 +1108,10 @@
     </script>
 </body>
 </html>
+
+
+
+
+
+
 

@@ -854,6 +854,13 @@
         }
         
         document.addEventListener('DOMContentLoaded', () => {
+            // Check login status on page load
+            if (localStorage.getItem('isLoggedIn') === 'true') {
+                loginContainer.classList.add('hidden');
+                mainAppContainer.classList.remove('hidden');
+                initializeApp();
+            }
+
             loginForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const password = e.target.password.value;
@@ -861,11 +868,13 @@
                 const isValidPassword = password === '9989';
 
                 if (isValidPassword) {
+                    localStorage.setItem('isLoggedIn', 'true'); // Save login state
                     loginError.classList.add('hidden');
                     loginContainer.classList.add('hidden');
                     mainAppContainer.classList.remove('hidden');
                     initializeApp();
                 } else {
+                    localStorage.removeItem('isLoggedIn');
                     loginError.textContent = 'รหัสผ่านไม่ถูกต้อง';
                     loginError.classList.remove('hidden');
                 }
@@ -1094,11 +1103,4 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
 

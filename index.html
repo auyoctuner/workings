@@ -6,6 +6,8 @@
     <title>ระบบจัดการงานซ่อม</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap');
         body {
@@ -167,6 +169,31 @@
             <div id="summary-container" class="space-y-6">
                 <!-- Summary will be generated here -->
             </div>
+            
+            <!-- กราฟแนวโน้มรายวัน -->
+            <hr class="my-8 border-t-2 border-gray-200">
+            <div id="chart-section">
+                <h2 class="text-xl font-semibold mb-4 text-gray-700">กำไรรายวัน</h2>
+                <div class="flex flex-col sm:flex-row gap-4 mb-4">
+                    <div class="flex-1">
+                        <label for="chart-month-select" class="block text-sm font-medium text-gray-700">เลือกเดือน</label>
+                        <select id="chart-month-select" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <!-- Options populated by JS -->
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label for="chart-year-select" class="block text-sm font-medium text-gray-700">เลือกปี</label>
+                        <select id="chart-year-select" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <!-- Options populated by JS -->
+                        </select>
+                    </div>
+                </div>
+                <div id="chart-container" class="bg-gray-50 p-4 rounded-lg shadow-inner">
+                    <canvas id="daily-trend-chart"></canvas>
+                    <p id="chart-placeholder" class="text-center text-gray-500 py-16">กรุณาเลือกเดือนและปีเพื่อแสดงกราฟ</p>
+                </div>
+                <div id="chart-summary-container" class="mt-4"></div>
+            </div>
 
         </div>
 
@@ -290,6 +317,7 @@
         let allJobs = [];
         let allSpareParts = [];
         let deleteCallback = null; // To handle different delete types
+        let dailyChartInstance = null; // To hold the chart instance
 
         // --- UI ELEMENTS ---
         const loginContainer = document.getElementById('login-container');
@@ -339,6 +367,8 @@
         const sparePartPriceInput = document.getElementById('spare-part-price');
         const sparePartSubmitBtn = document.getElementById('spare-part-submit-btn');
         const sparePartCancelBtn = document.getElementById('spare-part-cancel-btn');
+        const chartMonthSelect = document.getElementById('chart-month-select');
+        const chartYearSelect = document.getElementById('chart-year-select');
 
 
         // --- UTILITY FUNCTIONS ---
@@ -388,7 +418,12 @@
 
         function fetchJobs() {
             window.handleRepairs = res => {
-                if (res.status === 'success') { allJobs = res.data; filterAndRenderJobs(); } 
+                if (res.status === 'success') { 
+                    allJobs = res.data; 
+                    filterAndRenderJobs(); 
+                    populateChartFilterDropdowns();
+                    renderDailyTrendChart();
+                } 
                 else { showToast(res.message, 'error'); }
                 document.getElementById('handleRepairs')?.remove();
             };
@@ -521,6 +556,20 @@
             historyYearSelect.innerHTML = '<option value="">ทั้งหมด</option>' + Array.from({length: 6}, (_, i) => `<option value="${thaiYear - i - 543}" ${thaiYear - i === thaiYear ? 'selected' : ''}>${thaiYear - i}</option>`).join('');
         }
         
+        function populateChartFilterDropdowns() {
+            const years = [...new Set(allJobs.map(job => new Date(job.date).getFullYear()))].sort((a, b) => b - a);
+            const today = new Date();
+            const currentYear = today.getFullYear();
+
+            chartMonthSelect.innerHTML = '<option value="">-- เลือกเดือน --</option>' + thaiMonths.map((m, i) => `<option value="${String(i+1).padStart(2,'0')}">${m}</option>`).join('');
+            chartYearSelect.innerHTML = '<option value="">-- เลือกปี --</option>' + years.map(year => `<option value="${year}">${year + 543}</option>`).join('');
+
+            chartMonthSelect.value = String(today.getMonth() + 1).padStart(2, '0');
+            if (years.includes(currentYear)) {
+                chartYearSelect.value = currentYear;
+            }
+        }
+        
         function filterAndRenderJobs() {
             const scrollY = window.scrollY;
             const filteredJobs = getCurrentlyFilteredJobs();
@@ -609,17 +658,15 @@
         }
         
         function renderJobCounts(jobs) { jobCountSummary.innerHTML = `<div class="p-4 rounded-lg bg-blue-100 text-blue-700 font-semibold"><p class="text-sm">รวมจำนวนรายการทั้งหมด</p><p class="text-2xl mt-1">${jobs.length} รายการ</p></div>`; }
+        
         function updateSummary() {
-            // ดึงรายการที่ตรงตามตัวกรอง (เดือน/ปี) และเฉพาะรายการที่ถูกติ๊ก "ตรวจสอบแล้ว" เท่านั้น
             const jobsForSummary = getCurrentlyFilteredJobs().filter(job => job.isChecked);
-
-            // แสดงผลสรุปจากข้อมูลที่กรองแล้ว
             renderSummary(jobsForSummary);
         }
+
         function renderSummary(jobs) {
             summaryContainer.innerHTML = ''; // Clear previous summary
             
-            // If no jobs are checked for the summary, display a message.
             if (jobs.length === 0) {
                 summaryContainer.innerHTML = '<p class="text-center text-gray-500">กรุณาเลือกรายการเพื่อดูสรุป</p>';
                 return;
@@ -635,26 +682,21 @@
                 summary.notes[note].count++;
                 
                 const isNonContributingRevenue = job.revenue === 'refund' || job.revenue === 'claim' || (typeof job.revenue === 'number' && job.revenue < 0);
-
-                // ต้นทุนจะถูกนับรวมเสมอ ไม่ว่าจะเป็นรายการประเภทใด
                 const cost = typeof job.cost === 'number' ? job.cost : 0;
                 summary.totalCost += cost;
                 summary.notes[note].cost += cost;
 
                 if (isNonContributingRevenue) {
-                    // สำหรับงานคืนเงินและเคลม จะไม่นับรายรับ แต่นับจำนวน
                     if (job.revenue !== 'claim') {
                         summary.notes[note].refundCount++;
                     }
                 } else {
-                    // สำหรับงานปกติ จะนับรวมรายรับ
                     const revenue = typeof job.revenue === 'number' ? job.revenue : 0;
                     summary.totalRevenue += revenue;
                     summary.notes[note].revenue += revenue;
                 }
             });
 
-            // Determine the title based on the filter
             const selectedMonth = historyMonthSelect.value;
             const selectedYear = historyYearSelect.value;
             let title = '';
@@ -678,7 +720,6 @@
                 const ns = summary.notes[note];
                 const profit = ns.revenue - ns.cost;
                 const countText = ns.refundCount > 0 ? `(${ns.count} รายการ, คืนเงิน ${ns.refundCount})` : `(${ns.count} รายการ)`;
-
                 return `<li class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-2 rounded-md bg-white border"><span class="font-semibold text-lg text-gray-900 cursor-pointer hover:text-blue-600 hover:underline note-summary-item" data-note="${note}">${note}</span><div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm mt-1 sm:mt-0"><span class="text-gray-600">${countText}</span><span class="text-green-600">รับ: ${ns.revenue.toLocaleString()}</span><span class="text-red-600">ทุน: ${ns.cost.toLocaleString()}</span><span class="${profit >= 0 ? 'text-blue-600':'text-red-600'}">กำไร: ${profit.toLocaleString()}</span></div></li>`;
             }).join('');
 
@@ -694,6 +735,139 @@
             `;
             
             summaryContainer.appendChild(summaryDiv);
+        }
+
+        function renderDailyTrendChart() {
+            const chartCanvas = document.getElementById('daily-trend-chart');
+            const chartPlaceholder = document.getElementById('chart-placeholder');
+            const chartSummaryContainer = document.getElementById('chart-summary-container');
+            const selectedMonth = chartMonthSelect.value;
+            const selectedYear = chartYearSelect.value;
+
+            chartSummaryContainer.innerHTML = '';
+
+            if (!selectedMonth || !selectedYear) {
+                chartCanvas.classList.add('hidden');
+                chartPlaceholder.classList.remove('hidden');
+                chartPlaceholder.textContent = 'กรุณาเลือกเดือนและปีเพื่อแสดงกราฟ';
+                if (dailyChartInstance) {
+                    dailyChartInstance.destroy();
+                    dailyChartInstance = null;
+                }
+                return;
+            }
+
+            const jobsForChart = allJobs.filter(job => {
+                const jobDate = new Date(job.date);
+                return jobDate.getFullYear() == selectedYear && (jobDate.getMonth() + 1) == selectedMonth;
+            });
+
+            if (jobsForChart.length === 0) {
+                chartCanvas.classList.add('hidden');
+                chartPlaceholder.classList.remove('hidden');
+                chartPlaceholder.textContent = 'ไม่มีข้อมูลสำหรับเดือนและปีที่เลือก';
+                if (dailyChartInstance) {
+                    dailyChartInstance.destroy();
+                    dailyChartInstance = null;
+                }
+                return;
+            }
+
+            chartCanvas.classList.remove('hidden');
+            chartPlaceholder.classList.add('hidden');
+
+            const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+            const labels = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+            const dailyRevenue = Array(daysInMonth).fill(0);
+            const dailyCost = Array(daysInMonth).fill(0);
+
+            jobsForChart.forEach(job => {
+                const dayOfMonth = new Date(job.date).getDate() - 1; 
+                if (typeof job.revenue === 'number' && job.revenue > 0) {
+                    dailyRevenue[dayOfMonth] += job.revenue;
+                }
+                if (typeof job.cost === 'number') {
+                    dailyCost[dayOfMonth] += job.cost;
+                }
+            });
+
+            const dailyProfit = dailyRevenue.map((revenue, index) => revenue - dailyCost[index]);
+            
+            const totalProfit = dailyProfit.reduce((sum, p) => sum + p, 0);
+            const averageProfit = totalProfit / daysInMonth;
+
+            chartSummaryContainer.innerHTML = `
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
+                    <div class="p-3 rounded-lg bg-blue-100 text-blue-800">
+                        <p class="text-sm font-medium">กำไรรวมทั้งเดือน</p>
+                        <p class="text-2xl font-bold">${totalProfit.toLocaleString('th-TH')} บาท</p>
+                    </div>
+                    <div class="p-3 rounded-lg bg-green-100 text-green-800">
+                        <p class="text-sm font-medium">เฉลี่ยกำไรต่อวัน</p>
+                        <p class="text-2xl font-bold">${averageProfit.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท</p>
+                    </div>
+                </div>
+            `;
+
+            if (dailyChartInstance) {
+                dailyChartInstance.destroy();
+            }
+            
+            const ctx = chartCanvas.getContext('2d');
+            dailyChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'กำไร',
+                            data: dailyProfit,
+                            backgroundColor: dailyProfit.map(p => p >= 0 ? 'rgba(75, 192, 192, 0.6)' : 'rgba(255, 99, 132, 0.6)'),
+                            borderColor: dailyProfit.map(p => p >= 0 ? 'rgba(75, 192, 192, 1)' : 'rgba(255, 99, 132, 1)'),
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }, // ซ่อน legend เพราะมีแค่ dataset เดียว
+                        title: { display: true, text: `สรุปกำไรรายวันเดือน ${thaiMonths[selectedMonth-1]} ปี ${parseInt(selectedYear)+543}` }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                },
+                plugins: [{
+                    id: 'customDataLabels',
+                    afterDatasetsDraw: (chart) => {
+                        const { ctx } = chart;
+                        ctx.save();
+                        
+                        ctx.font = '11px Sarabun';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
+
+                        const profitDatasetMeta = chart.getDatasetMeta(0); // Index 0 is the 'กำไร' dataset
+
+                        profitDatasetMeta.data.forEach((bar, index) => {
+                            const data = chart.data.datasets[0].data[index];
+                            if (data !== null && data !== 0) {
+                                const value = data.toLocaleString();
+                                // Position text above positive bars and below negative bars
+                                const yPos = bar.y + (data >= 0 ? -5 : 18); 
+                                
+                                ctx.fillStyle = data >= 0 ? 'rgba(0, 0, 0, 0.8)' : 'rgba(200, 0, 0, 1)';
+                                ctx.fillText(value, bar.x, yPos);
+                            }
+                        });
+                        ctx.restore();
+                    }
+                }]
+            });
         }
         
         function renderNotesSelect(notes) {
@@ -713,7 +887,7 @@
                  sparePartsListContainer.innerHTML = '<li><p class="text-center text-gray-500 p-4">กรุณาพิมพ์เพื่อค้นหาอะไหล่</p></li>';
                  return;
             } else {
-                const searchKeywords = searchTerm.split(/\s+/).filter(k => k); // Split by space and remove empty strings
+                const searchKeywords = searchTerm.split(/\s+/).filter(k => k);
                 if (searchKeywords.length > 0) {
                     filteredParts = allSpareParts.filter(part => {
                         const partNameLower = part.partName.toLowerCase();
@@ -824,6 +998,10 @@
 
             historyMonthSelect.addEventListener('change', filterAndRenderJobs);
             historyYearSelect.addEventListener('change', filterAndRenderJobs);
+            
+            chartMonthSelect.addEventListener('change', renderDailyTrendChart);
+            chartYearSelect.addEventListener('change', renderDailyTrendChart);
+
             checkAllJobs.addEventListener('change', (e) => {
                 const isChecked = e.target.checked;
                 
@@ -851,7 +1029,6 @@
         }
         
         document.addEventListener('DOMContentLoaded', () => {
-            // Check login status on page load
             if (localStorage.getItem('isLoggedIn') === 'true') {
                 loginContainer.classList.add('hidden');
                 mainAppContainer.classList.remove('hidden');
@@ -861,11 +1038,10 @@
             loginForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const password = e.target.password.value;
-
                 const isValidPassword = password === '9989';
 
                 if (isValidPassword) {
-                    localStorage.setItem('isLoggedIn', 'true'); // Save login state
+                    localStorage.setItem('isLoggedIn', 'true');
                     loginError.classList.add('hidden');
                     loginContainer.classList.add('hidden');
                     mainAppContainer.classList.remove('hidden');
@@ -1052,9 +1228,7 @@
                 jobsForNote = jobsForNote.filter(j => (new Date(j.date).getMonth() + 1) == selectedMonth);
             }
             
-            // Filter for checked jobs only
             jobsForNote = jobsForNote.filter(job => job.isChecked);
-
             jobsForNote.sort((a,b) => a.createdAt - b.createdAt);
             
             let title = `รายการงานซ่อมสำหรับ "${note}" (เฉพาะที่ตรวจสอบแล้ว)`;
@@ -1108,10 +1282,6 @@
     </script>
 </body>
 </html>
-
-
-
-
 
 
 

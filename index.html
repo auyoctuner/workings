@@ -195,7 +195,7 @@
 
                 <div id="chart-container" class="bg-gray-50 p-4 rounded-lg shadow-inner relative">
                     <div class="absolute top-2 right-2 z-10">
-                        <label for="profit-goal-input" class="block text-xs font-medium text-gray-600 mb-1 text-right">เป้าหมายกำไร</label>
+                        <label for="profit-goal-input" class="block text-xs font-medium text-gray-600 mb-1 text-right">เป้าหมายกำไร/วัน</label>
                         <div class="flex items-center space-x-1">
                             <input type="number" id="profit-goal-input" class="block w-24 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
                             <button type="button" id="profit-goal-set-btn" class="px-3 py-1 bg-blue-500 text-white rounded-md text-xs font-medium hover:bg-blue-600 whitespace-nowrap">ตั้งค่า</button>
@@ -855,6 +855,16 @@
                     ]
                 },
                 options: {
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const chartElement = elements[0];
+                            const dayIndex = chartElement.index;
+                            const day = dayIndex + 1;
+                            const month = chartMonthSelect.value;
+                            const year = chartYearSelect.value;
+                            showJobsForDayModal(day, month, year);
+                        }
+                    },
                     responsive: true,
                     plugins: {
                         legend: { display: false },
@@ -1271,6 +1281,55 @@
             }
         }
 
+        function showJobsForDayModal(day, month, year) {
+            const dateToFilter = new Date(year, month - 1, day);
+
+            const jobsForDay = allJobs.filter(job => {
+                const jobDate = new Date(job.date);
+                return jobDate.getFullYear() === dateToFilter.getFullYear() &&
+                       jobDate.getMonth() === dateToFilter.getMonth() &&
+                       jobDate.getDate() === dateToFilter.getDate();
+            });
+            
+            jobsForDay.sort((a,b) => a.createdAt - b.createdAt);
+            
+            const title = `รายการงานซ่อมวันที่ ${dateToFilter.toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'})}`;
+            noteJobsModalTitle.textContent = title;
+            noteJobsModalList.innerHTML = '';
+
+            if (jobsForDay.length === 0) {
+                noteJobsModalList.innerHTML = `<p class="text-center text-gray-500">ไม่พบรายการงานซ่อมสำหรับวันนี้</p>`;
+            } else {
+                jobsForDay.forEach(job => {
+                    let revenueText = '';
+                     if (typeof job.revenue === 'number') {
+                        if (job.revenue < 0) {
+                            const amount = Math.abs(job.revenue).toLocaleString();
+                            revenueText = `<span class="text-red-600 font-medium">คืนเงิน(${amount})</span>`;
+                        } else {
+                            revenueText = `<span class="text-green-600">${job.revenue.toLocaleString()} บาท</span>`;
+                        }
+                    } else if (job.revenue === 'pending') {
+                        revenueText = `<span class="text-yellow-500 font-medium">รอดำเนินการ</span>`;
+                    } else if (job.revenue === 'claim') {
+                        revenueText = `<span class="text-red-600 font-medium">งานเคลม</span>`;
+                    } else if (job.revenue === 'refund') {
+                        revenueText = `<span class="text-red-600 font-medium">คืนเงิน</span>`;
+                    }
+
+                    const jobItem = document.createElement('div');
+                    jobItem.className = 'p-3 rounded-lg bg-gray-100 border border-gray-200';
+                    jobItem.innerHTML = `<p class="text-base font-semibold text-gray-900">${job.customerName} (${job.device})</p>
+                                         <div class="mt-2 text-sm">
+                                             <p class="text-gray-600">รายรับ: ${revenueText}</p>
+                                             <p class="text-gray-600">ต้นทุน: <span class="text-red-600">${typeof job.cost === 'number' ? job.cost.toLocaleString() + ' บาท' : (job.cost === 'no_cost' ? '-' : 'รอดำเนินการ')}</span></p>
+                                         </div>`;
+                    noteJobsModalList.appendChild(jobItem);
+                });
+            }
+            noteJobsModal.style.display = 'flex';
+        }
+
         function showNoteJobsModal(note) {
             const selectedMonth = historyMonthSelect.value;
             const selectedYear = historyYearSelect.value;
@@ -1323,12 +1382,15 @@
 
                     const jobItem = document.createElement('div');
                     jobItem.className = 'p-3 rounded-lg bg-gray-100 border border-gray-200';
-                    jobItem.innerHTML = `<p class="text-sm text-gray-500">${dateStr}</p>
-                                         <p class="text-base font-semibold text-gray-900">${job.customerName}</p>
-                                         <div class="mt-2 text-sm">
-                                             <p class="text-gray-600">รายรับ: ${revenueText}</p>
-                                             <p class="text-gray-600">ต้นทุน: <span class="text-red-600">${typeof job.cost === 'number' ? job.cost.toLocaleString() + ' บาท' : (job.cost === 'no_cost' ? '-' : 'รอดำเนินการ')}</span></p>
-                                         </div>`;
+                    jobItem.innerHTML = `
+                        <div class="flex justify-between items-baseline">
+                             <p class="text-base font-semibold text-gray-900">${job.customerName}</p>
+                             <p class="text-sm text-gray-500">${dateStr}</p>
+                        </div>
+                         <div class="mt-2 text-sm">
+                             <p class="text-gray-600">รายรับ: ${revenueText}</p>
+                             <p class="text-gray-600">ต้นทุน: <span class="text-red-600">${typeof job.cost === 'number' ? job.cost.toLocaleString() + ' บาท' : (job.cost === 'no_cost' ? '-' : 'รอดำเนินการ')}</span></p>
+                         </div>`;
                     noteJobsModalList.appendChild(jobItem);
                 });
             }

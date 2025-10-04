@@ -173,26 +173,34 @@
             <!-- กราฟแนวโน้มรายวัน -->
             <hr class="my-8 border-t-2 border-gray-200">
             <div id="chart-section">
-                <h2 class="text-xl font-semibold mb-4 text-gray-700">กำไรรายวัน</h2>
-                <div class="flex flex-col sm:flex-row gap-4 mb-4">
-                    <div class="flex-1">
-                        <label for="chart-month-select" class="block text-sm font-medium text-gray-700">เลือกเดือน</label>
-                        <select id="chart-month-select" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
-                            <!-- Options populated by JS -->
-                        </select>
-                    </div>
-                    <div class="flex-1">
-                        <label for="chart-year-select" class="block text-sm font-medium text-gray-700">เลือกปี</label>
-                        <select id="chart-year-select" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
-                            <!-- Options populated by JS -->
-                        </select>
-                    </div>
-                    <div class="flex-1">
-                        <label for="profit-goal-input" class="block text-sm font-medium text-gray-700">เป้าหมายกำไรต่อวัน</label>
-                        <input type="number" id="profit-goal-input" value="3000" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-700">กำไรรายวัน</h2>
+                        <div class="flex flex-col sm:flex-row gap-4 mt-2">
+                            <div class="flex-1">
+                                <label for="chart-month-select" class="block text-sm font-medium text-gray-700">เลือกเดือน</label>
+                                <select id="chart-month-select" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                    <!-- Options populated by JS -->
+                                </select>
+                            </div>
+                            <div class="flex-1">
+                                <label for="chart-year-select" class="block text-sm font-medium text-gray-700">เลือกปี</label>
+                                <select id="chart-year-select" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                    <!-- Options populated by JS -->
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div id="chart-container" class="bg-gray-50 p-4 rounded-lg shadow-inner">
+
+                <div id="chart-container" class="bg-gray-50 p-4 rounded-lg shadow-inner relative">
+                    <div class="absolute top-2 right-2 z-10">
+                        <label for="profit-goal-input" class="block text-xs font-medium text-gray-600 mb-1 text-right">เป้าหมายกำไร</label>
+                        <div class="flex items-center space-x-1">
+                            <input type="number" id="profit-goal-input" class="block w-24 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <button type="button" id="profit-goal-set-btn" class="px-3 py-1 bg-blue-500 text-white rounded-md text-xs font-medium hover:bg-blue-600 whitespace-nowrap">ตั้งค่า</button>
+                        </div>
+                    </div>
                     <canvas id="daily-trend-chart"></canvas>
                     <p id="chart-placeholder" class="text-center text-gray-500 py-16">กรุณาเลือกเดือนและปีเพื่อแสดงกราฟ</p>
                 </div>
@@ -374,6 +382,7 @@
         const chartMonthSelect = document.getElementById('chart-month-select');
         const chartYearSelect = document.getElementById('chart-year-select');
         const profitGoalInput = document.getElementById('profit-goal-input');
+        const profitGoalSetBtn = document.getElementById('profit-goal-set-btn');
 
 
         // --- UTILITY FUNCTIONS ---
@@ -964,6 +973,10 @@
         function initializeApp() {
             populateDateDropdowns();
             populateHistoryDropdowns();
+            
+            const savedProfitGoal = localStorage.getItem('profitGoal');
+            profitGoalInput.value = savedProfitGoal || 3000;
+            
             fetchAllData();
             jobsList.addEventListener('click', handleCellClick);
             summaryContainer.addEventListener('click', handleNoteSummaryClick);
@@ -1033,7 +1046,17 @@
             
             chartMonthSelect.addEventListener('change', renderDailyTrendChart);
             chartYearSelect.addEventListener('change', renderDailyTrendChart);
-            profitGoalInput.addEventListener('input', renderDailyTrendChart);
+
+            profitGoalSetBtn.addEventListener('click', () => {
+                const newGoal = profitGoalInput.value;
+                if (newGoal && !isNaN(newGoal)) {
+                    localStorage.setItem('profitGoal', newGoal);
+                    showToast(`ตั้งเป้าหมายกำไรใหม่เป็น ${Number(newGoal).toLocaleString()} บาท`, 'success');
+                    renderDailyTrendChart(); // Re-render chart with new goal
+                } else {
+                    showToast('กรุณากรอกเป้าหมายเป็นตัวเลข', 'error');
+                }
+            });
 
             checkAllJobs.addEventListener('change', (e) => {
                 const isChecked = e.target.checked;

@@ -23,6 +23,10 @@
         .toast {
             transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
         }
+        #jobs-list tr[data-id]:hover {
+            background-color: #f9fafb; /* gray-50 */
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -679,7 +683,7 @@
         }
 
         function renderSummary(jobs) {
-            summaryContainer.innerHTML = ''; // Clear previous summary
+            summaryContainer.innerHTML = '';
             
             if (jobs.length === 0) {
                 summaryContainer.innerHTML = '<p class="text-center text-gray-500">กรุณาเลือกรายการเพื่อดูสรุป</p>';
@@ -734,7 +738,7 @@
                 const ns = summary.notes[note];
                 const profit = ns.revenue - ns.cost;
                 const countText = ns.refundCount > 0 ? `(${ns.count} รายการ, คืนเงิน ${ns.refundCount})` : `(${ns.count} รายการ)`;
-                return `<li class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-2 rounded-md bg-white border"><span class="font-semibold text-lg text-gray-900 cursor-pointer hover:text-blue-600 hover:underline note-summary-item" data-note="${note}">${note}</span><div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm mt-1 sm:mt-0"><span class="text-gray-600">${countText}</span><span class="text-green-600">รับ: ${ns.revenue.toLocaleString()}</span><span class="text-red-600">ทุน: ${ns.cost.toLocaleString()}</span><span class="${profit >= 0 ? 'text-blue-600':'text-red-600'}">กำไร: ${profit.toLocaleString()}</span></div></li>`;
+                return `<li class="note-summary-item flex flex-col sm:flex-row justify-between items-start sm:items-center p-2 rounded-md bg-white border hover:bg-blue-50 transition-colors duration-200 cursor-pointer" data-note="${note}"><span class="font-semibold text-lg text-gray-900">${note}</span><div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm mt-1 sm:mt-0"><span class="text-gray-600">${countText}</span><span class="text-green-600">รับ: ${ns.revenue.toLocaleString()}</span><span class="text-red-600">ทุน: ${ns.cost.toLocaleString()}</span><span class="${profit >= 0 ? 'text-blue-600':'text-red-600'}">กำไร: ${profit.toLocaleString()}</span></div></li>`;
             }).join('');
 
             summaryDiv.innerHTML = `
@@ -851,6 +855,8 @@
                             hoverBackgroundColor: dailyProfit.map(p => p >= profitGoal ? 'rgba(16, 185, 129, 1)' : 'rgba(239, 68, 68, 1)'),
                             borderRadius: 6,
                             borderWidth: 0,
+                            hoverBorderWidth: 2,
+                            hoverBorderColor: 'rgba(31, 41, 55, 0.5)'
                         }
                     ]
                 },
@@ -864,6 +870,10 @@
                             const year = chartYearSelect.value;
                             showJobsForDayModal(day, month, year);
                         }
+                    },
+                    onHover: (event, chartElement) => {
+                        const canvas = event.native.target;
+                        canvas.style.cursor = chartElement[0] ? 'pointer' : 'default';
                     },
                     responsive: true,
                     plugins: {

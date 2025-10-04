@@ -187,6 +187,10 @@
                             <!-- Options populated by JS -->
                         </select>
                     </div>
+                    <div class="flex-1">
+                        <label for="profit-goal-input" class="block text-sm font-medium text-gray-700">เป้าหมายกำไรต่อวัน</label>
+                        <input type="number" id="profit-goal-input" value="3000" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                    </div>
                 </div>
                 <div id="chart-container" class="bg-gray-50 p-4 rounded-lg shadow-inner">
                     <canvas id="daily-trend-chart"></canvas>
@@ -369,6 +373,7 @@
         const sparePartCancelBtn = document.getElementById('spare-part-cancel-btn');
         const chartMonthSelect = document.getElementById('chart-month-select');
         const chartYearSelect = document.getElementById('chart-year-select');
+        const profitGoalInput = document.getElementById('profit-goal-input');
 
 
         // --- UTILITY FUNCTIONS ---
@@ -743,6 +748,7 @@
             const chartSummaryContainer = document.getElementById('chart-summary-container');
             const selectedMonth = chartMonthSelect.value;
             const selectedYear = chartYearSelect.value;
+            const profitGoal = parseFloat(profitGoalInput.value) || 3000;
 
             chartSummaryContainer.innerHTML = '';
 
@@ -795,17 +801,26 @@
             const dailyProfit = dailyRevenue.map((revenue, index) => revenue - dailyCost[index]);
             
             const totalProfit = dailyProfit.reduce((sum, p) => sum + p, 0);
-            const averageProfit = totalProfit / daysInMonth;
+            const revenueDaysCount = dailyRevenue.filter(r => r > 0).length;
+            const averageProfit = revenueDaysCount > 0 ? totalProfit / revenueDaysCount : 0;
+            const successfulDays = dailyProfit.filter(p => p >= profitGoal).length;
+            const successPercentage = revenueDaysCount > 0 ? (successfulDays / revenueDaysCount) * 100 : 0;
+
 
             chartSummaryContainer.innerHTML = `
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
-                    <div class="p-3 rounded-lg bg-blue-100 text-blue-800">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                    <div class="p-3 rounded-lg bg-blue-100 text-blue-800 flex flex-col justify-center">
                         <p class="text-sm font-medium">กำไรรวมทั้งเดือน</p>
                         <p class="text-2xl font-bold">${totalProfit.toLocaleString('th-TH')} บาท</p>
                     </div>
-                    <div class="p-3 rounded-lg bg-green-100 text-green-800">
-                        <p class="text-sm font-medium">เฉลี่ยกำไรต่อวัน</p>
+                    <div class="p-3 rounded-lg bg-green-100 text-green-800 flex flex-col justify-center">
+                        <p class="text-sm font-medium">เฉลี่ยกำไร/วัน (เฉพาะวันที่มีรายรับ)</p>
                         <p class="text-2xl font-bold">${averageProfit.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท</p>
+                    </div>
+                    <div class="p-3 rounded-lg bg-purple-100 text-purple-800 flex flex-col justify-center">
+                        <p class="text-sm font-medium">สำเร็จตามเป้าหมาย</p>
+                        <p class="text-2xl font-bold">${successPercentage.toFixed(1)}%</p>
+                        <p class="text-xs text-purple-600">(${successfulDays} จาก ${revenueDaysCount} วันที่มีรายรับ)</p>
                     </div>
                 </div>
             `;
@@ -823,21 +838,39 @@
                         {
                             label: 'กำไร',
                             data: dailyProfit,
-                            backgroundColor: dailyProfit.map(p => p >= 0 ? 'rgba(75, 192, 192, 0.6)' : 'rgba(255, 99, 132, 0.6)'),
-                            borderColor: dailyProfit.map(p => p >= 0 ? 'rgba(75, 192, 192, 1)' : 'rgba(255, 99, 132, 1)'),
-                            borderWidth: 1
+                            backgroundColor: dailyProfit.map(p => p >= profitGoal ? 'rgba(52, 211, 153, 0.8)' : 'rgba(248, 113, 113, 0.8)'),
+                            hoverBackgroundColor: dailyProfit.map(p => p >= profitGoal ? 'rgba(16, 185, 129, 1)' : 'rgba(239, 68, 68, 1)'),
+                            borderRadius: 6,
+                            borderWidth: 0,
                         }
                     ]
                 },
                 options: {
                     responsive: true,
                     plugins: {
-                        legend: { display: false }, // ซ่อน legend เพราะมีแค่ dataset เดียว
-                        title: { display: true, text: `สรุปกำไรรายวันเดือน ${thaiMonths[selectedMonth-1]} ปี ${parseInt(selectedYear)+543}` }
+                        legend: { display: false },
+                        title: { display: true, text: `สรุปกำไรรายวันเดือน ${thaiMonths[selectedMonth-1]} ปี ${parseInt(selectedYear)+543}` },
+                        tooltip: {
+                            backgroundColor: '#1f2937',
+                            titleColor: '#ffffff',
+                            bodyColor: '#ffffff',
+                            borderRadius: 8,
+                            padding: 12,
+                            boxPadding: 4,
+                            usePointStyle: true,
+                        }
                     },
                     scales: {
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                             grid: {
+                                color: '#e5e7eb'
+                            }
+                        },
+                        x: {
+                             grid: {
+                                display: false
+                            }
                         }
                     }
                 },
@@ -851,13 +884,12 @@
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'bottom';
 
-                        const profitDatasetMeta = chart.getDatasetMeta(0); // Index 0 is the 'กำไร' dataset
+                        const profitDatasetMeta = chart.getDatasetMeta(0);
 
                         profitDatasetMeta.data.forEach((bar, index) => {
                             const data = chart.data.datasets[0].data[index];
                             if (data !== null && data !== 0) {
                                 const value = data.toLocaleString();
-                                // Position text above positive bars and below negative bars
                                 const yPos = bar.y + (data >= 0 ? -5 : 18); 
                                 
                                 ctx.fillStyle = data >= 0 ? 'rgba(0, 0, 0, 0.8)' : 'rgba(200, 0, 0, 1)';
@@ -1001,6 +1033,7 @@
             
             chartMonthSelect.addEventListener('change', renderDailyTrendChart);
             chartYearSelect.addEventListener('change', renderDailyTrendChart);
+            profitGoalInput.addEventListener('input', renderDailyTrendChart);
 
             checkAllJobs.addEventListener('change', (e) => {
                 const isChecked = e.target.checked;
@@ -1282,6 +1315,4 @@
     </script>
 </body>
 </html>
-
-
 

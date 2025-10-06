@@ -367,6 +367,7 @@
         const confirmDeleteBtn = document.getElementById('confirm-delete');
         const confirmCancelBtn = document.getElementById('confirm-cancel');
         const manageNotesModal = document.getElementById('manage-notes-modal');
+        const manageNotesBtn = document.getElementById('manage-notes-btn');
         const closeManageNotesModalBtn = document.getElementById('close-manage-notes-modal');
         const newNoteInputModal = document.getElementById('new-note-input-modal');
         const saveNoteButton = document.getElementById('save-note-button');
@@ -1020,10 +1021,30 @@
             jobSearchListContainer.innerHTML = filteredJobs.sort((a,b) => new Date(b.date) - new Date(a.date)).map(job => {
                     const dateObj = new Date(job.date);
                     const dateStr = dateObj.toLocaleDateString('th-TH', { year: '2-digit', month: 'short', day: 'numeric'});
+                    
+                    let revenueHTML = '';
+                    if (typeof job.revenue === 'number') {
+                        if (job.revenue < 0) {
+                             const refundAmount = Math.abs(job.revenue).toLocaleString();
+                             revenueHTML = `<span class="text-sm font-medium text-red-600">คืนเงิน(${refundAmount})</span>`;
+                        } else {
+                             revenueHTML = `<span class="text-sm font-medium text-green-600">${job.revenue.toLocaleString()} บาท</span>`;
+                        }
+                    } else if (job.revenue === 'claim') {
+                        revenueHTML = `<span class="text-sm font-medium text-red-600">งานเคลม</span>`;
+                    } else if (job.revenue === 'refund') {
+                         revenueHTML = `<span class="text-sm font-medium text-red-600">คืนเงิน</span>`;
+                    } else { // pending
+                        revenueHTML = `<span class="text-sm font-medium text-yellow-500">รอดำเนินการ</span>`;
+                    }
+
                     return `<li class="job-search-item flex items-center justify-between p-3 bg-gray-50 rounded-md border cursor-pointer hover:bg-blue-100" data-job-id="${job.id}">
                                 <div>
                                     <p class="font-semibold text-gray-800">${job.customerName}</p>
                                     <p class="text-sm text-gray-500">${job.device} - ${dateStr}</p>
+                                </div>
+                                <div>
+                                    ${revenueHTML}
                                 </div>
                             </li>`;
             }).join('');
@@ -1076,7 +1097,9 @@
                 });
             }
             
-            sparePartCancelBtn.addEventListener('click', resetSparePartForm);
+            if (sparePartCancelBtn) {
+               sparePartCancelBtn.addEventListener('click', resetSparePartForm);
+            }
 
             repairForm.addEventListener('submit', (e) => {
                 e.preventDefault();
@@ -1105,7 +1128,7 @@
             });
             confirmCancelBtn.addEventListener('click', () => { confirmModal.style.display = 'none'; });
 
-            document.getElementById('manage-notes-btn').addEventListener('click', () => { manageNotesModal.style.display = 'flex'; });
+            manageNotesBtn.addEventListener('click', () => { manageNotesModal.style.display = 'flex'; });
             closeManageNotesModalBtn.addEventListener('click', () => { manageNotesModal.style.display = 'none'; });
             saveNoteButton.addEventListener('click', () => {
                 const newNote = newNoteInputModal.value.trim();

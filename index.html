@@ -269,32 +269,9 @@
             <div class="bg-white/95 backdrop-blur-sm rounded-lg p-6 shadow-xl w-full max-w-md max-h-[85vh] flex flex-col">
                 <div class="flex justify-between items-center mb-4 flex-shrink-0">
                     <h3 class="text-xl font-bold text-gray-900">ค้นหาและจัดการ</h3>
-                    <div class="flex space-x-2">
-                        <button id="toggle-add-part-btn" title="เพิ่ม/แก้ไขอะไหล่" class="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded-md hover:bg-gray-300 transition-colors">
-                            เพิ่มรายการ
-                        </button>
-                        <button id="close-spare-parts-modal" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
-                    </div>
+                    <button id="close-spare-parts-modal" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
                 </div>
                 
-                <div id="add-part-form-container" class="hidden flex-shrink-0">
-                    <form id="spare-part-form" class="bg-gray-100 p-4 rounded-lg mb-4 flex flex-wrap items-end gap-4">
-                        <input type="hidden" id="spare-part-id">
-                        <div class="flex-grow">
-                            <label for="spare-part-name" class="block text-sm font-medium text-gray-700">ชื่ออะไหล่</label>
-                            <input type="text" id="spare-part-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
-                        </div>
-                        <div class="flex-grow">
-                            <label for="spare-part-price" class="block text-sm font-medium text-gray-700">ราคา</label>
-                            <input type="number" id="spare-part-price" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
-                        </div>
-                        <div class="flex space-x-2">
-                            <button type="submit" id="spare-part-submit-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">เพิ่มอะไหล่</button>
-                            <button type="button" id="spare-part-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 hidden">ยกเลิก</button>
-                        </div>
-                    </form>
-                </div>
-
                 <div class="flex-grow overflow-y-auto pr-2">
                     <!-- Job Search -->
                     <div class="mb-4">
@@ -309,6 +286,28 @@
                     <div class="mb-4">
                         <label for="spare-part-search" class="block text-sm font-medium text-gray-700">ค้นหาชื่ออะไหล่</label>
                         <input type="search" id="spare-part-search" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="พิมพ์ชื่ออะไหล่...">
+                    </div>
+                     <div id="add-part-form-container" class="hidden">
+                        <form id="spare-part-form" class="bg-gray-100 p-4 rounded-lg mb-4 flex flex-wrap items-end gap-4">
+                            <input type="hidden" id="spare-part-id">
+                            <div class="flex-grow">
+                                <label for="spare-part-name" class="block text-sm font-medium text-gray-700">ชื่ออะไหล่</label>
+                                <input type="text" id="spare-part-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                            </div>
+                            <div class="flex-grow">
+                                <label for="spare-part-price" class="block text-sm font-medium text-gray-700">ราคา</label>
+                                <input type="number" id="spare-part-price" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                            </div>
+                            <div class="flex space-x-2">
+                                <button type="submit" id="spare-part-submit-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">เพิ่มอะไหล่</button>
+                                <button type="button" id="spare-part-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 hidden">ยกเลิก</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="mb-4">
+                        <button id="toggle-add-part-btn" title="เพิ่ม/แก้ไขอะไหล่" class="w-full px-3 py-2 bg-gray-200 text-gray-700 text-sm rounded-md hover:bg-gray-300 transition-colors">
+                            เพิ่มรายการอะไหล่
+                        </button>
                     </div>
                     <ul id="spare-parts-list-container" class="space-y-2"></ul>
                 </div>
@@ -546,14 +545,24 @@
         function saveSparePart(partData) {
             window.handleSavePart = res => {
                 if (res.status === 'success') {
+                    const isUpdate = !!sparePartIdInput.value;
                     const savedPart = res.data;
                     const index = allSpareParts.findIndex(p => p.id === savedPart.id);
                     if (index !== -1) allSpareParts[index] = savedPart;
                     else allSpareParts.push(savedPart);
                     renderSparePartsList();
-                    resetSparePartForm();
                     showToast('บันทึกข้อมูลอะไหล่สำเร็จ', 'success');
-                } else { showToast(res.message, 'error'); }
+
+                    if (isUpdate) {
+                        resetSparePartForm(true); // Hide form after update
+                    } else {
+                        sparePartForm.reset(); // Just clear the fields
+                        sparePartIdInput.value = ''; // Just in case
+                        sparePartNameInput.focus(); // Focus for next entry
+                    }
+                } else { 
+                    showToast(res.message, 'error'); 
+                }
                 document.getElementById('handleSavePart')?.remove();
             };
             callApi('save_spare_part', { data: partData }, 'handleSavePart');
@@ -988,12 +997,14 @@
             }
         }
         
-        function resetSparePartForm(){
+        function resetSparePartForm(hideForm = true){
             sparePartForm.reset();
             sparePartIdInput.value = '';
             sparePartSubmitBtn.textContent = 'เพิ่มอะไหล่';
             sparePartCancelBtn.classList.add('hidden');
-            addPartFormContainer.classList.add('hidden');
+            if(hideForm){
+                addPartFormContainer.classList.add('hidden');
+            }
         }
 
         function renderJobSearchResults() {
@@ -1098,7 +1109,9 @@
             }
             
             if (sparePartCancelBtn) {
-               sparePartCancelBtn.addEventListener('click', resetSparePartForm);
+               sparePartCancelBtn.addEventListener('click', ()=>{
+                   resetSparePartForm(true);
+               });
             }
 
             repairForm.addEventListener('submit', (e) => {

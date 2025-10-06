@@ -264,27 +264,20 @@
             </div>
         </div>
 
-        <!-- Spare Parts Modal -->
+        <!-- Search and Parts Modal -->
         <div id="spare-parts-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-start justify-end p-4 z-40">
-            <div class="bg-white/80 backdrop-blur-sm rounded-lg p-6 shadow-xl w-full max-w-sm max-h-[85vh] flex flex-col">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-bold text-gray-900">จัดการข้อมูลอะไหล่</h3>
+            <div class="bg-white/95 backdrop-blur-sm rounded-lg p-6 shadow-xl w-full max-w-md max-h-[85vh] flex flex-col">
+                <div class="flex justify-between items-center mb-4 flex-shrink-0">
+                    <h3 class="text-xl font-bold text-gray-900">ค้นหาและจัดการ</h3>
                     <div class="flex space-x-2">
-                        <!-- ปุ่มไอคอนสำหรับเพิ่มรายการ -->
                         <button id="toggle-add-part-btn" title="เพิ่ม/แก้ไขอะไหล่" class="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded-md hover:bg-gray-300 transition-colors">
                             เพิ่มรายการ
                         </button>
-                        <!-- ปุ่มปิดหน้าต่าง -->
                         <button id="close-spare-parts-modal" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
                     </div>
                 </div>
-
-                <div class="mb-4">
-                    <input type="search" id="spare-part-search" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="ค้นหาชื่ออะไหล่...">
-                </div>
-
-                <!-- ส่วนเพิ่ม/แก้ไขอะไหล่ (ซ่อนไว้เริ่มต้น) -->
-                <div id="add-part-form-container" class="hidden">
+                
+                <div id="add-part-form-container" class="hidden flex-shrink-0">
                     <form id="spare-part-form" class="bg-gray-100 p-4 rounded-lg mb-4 flex flex-wrap items-end gap-4">
                         <input type="hidden" id="spare-part-id">
                         <div class="flex-grow">
@@ -303,17 +296,29 @@
                 </div>
 
                 <div class="flex-grow overflow-y-auto pr-2">
-                    <ul id="spare-parts-list-container" class="space-y-2">
-                        <!-- Spare parts list will be populated here -->
-                    </ul>
+                    <!-- Job Search -->
+                    <div class="mb-4">
+                        <label for="search-input" class="block text-sm font-medium text-gray-700">ค้นหางานซ่อม</label>
+                        <input type="search" id="search-input" placeholder="พิมพ์ชื่องานซ่อม..." class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <ul id="job-search-list-container" class="space-y-2 mb-4"></ul>
+
+                    <hr class="my-4">
+
+                    <!-- Spare Part Search -->
+                    <div class="mb-4">
+                        <label for="spare-part-search" class="block text-sm font-medium text-gray-700">ค้นหาชื่ออะไหล่</label>
+                        <input type="search" id="spare-part-search" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="พิมพ์ชื่ออะไหล่...">
+                    </div>
+                    <ul id="spare-parts-list-container" class="space-y-2"></ul>
                 </div>
             </div>
         </div>
 
+
         <!-- Floating Buttons Container -->
         <div id="floating-btn-container" class="fixed bottom-6 right-6 flex flex-col items-center space-y-4" style="z-index: 100;">
-            <button id="sticky-parts-btn" title="จัดการข้อมูลอะไหล่" class="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition ease-in-out duration-150">
-                <!-- ไอคอนแว่นขยายสำหรับการค้นหา -->
+            <button id="sticky-parts-btn" title="ค้นหาและจัดการ" class="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition ease-in-out duration-150">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
@@ -387,6 +392,8 @@
         const chartYearSelect = document.getElementById('chart-year-select');
         const profitGoalInput = document.getElementById('profit-goal-input');
         const profitGoalSetBtn = document.getElementById('profit-goal-set-btn');
+        const searchInput = document.getElementById('search-input');
+        const jobSearchListContainer = document.getElementById('job-search-list-container');
 
 
         // --- UTILITY FUNCTIONS ---
@@ -663,7 +670,6 @@
         function getCurrentlyFilteredJobs() {
             const selectedMonth = historyMonthSelect.value;
             const selectedYear = historyYearSelect.value;
-            
             let jobs = allJobs.filter(j => j && j.date); 
 
             if (selectedYear) {
@@ -738,7 +744,7 @@
                 const ns = summary.notes[note];
                 const profit = ns.revenue - ns.cost;
                 const countText = ns.refundCount > 0 ? `(${ns.count} รายการ, คืนเงิน ${ns.refundCount})` : `(${ns.count} รายการ)`;
-                return `<li class="note-summary-item flex flex-col sm:flex-row justify-between items-start sm:items-center p-2 rounded-md bg-white border hover:bg-blue-50 transition-colors duration-200 cursor-pointer" data-note="${note}"><span class="font-semibold text-lg text-gray-900">${note}</span><div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm mt-1 sm:mt-0"><span class="text-gray-600">${countText}</span><span class="text-green-600">รับ: ${ns.revenue.toLocaleString()}</span><span class="text-red-600">ทุน: ${ns.cost.toLocaleString()}</span><span class="${profit >= 0 ? 'text-blue-600':'text-red-600'}">กำไร: ${profit.toLocaleString()}</span></div></li>`;
+                return `<li class="note-summary-item flex flex-col sm:flex-row justify-between items-start sm:items-center p-2 rounded-md bg-white border hover:shadow-md hover:-translate-y-1 transform transition-all duration-200 cursor-pointer" data-note="${note}"><span class="font-semibold text-lg text-gray-900">${note}</span><div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm mt-1 sm:mt-0"><span class="text-gray-600">${countText}</span><span class="text-green-600">รับ: ${ns.revenue.toLocaleString()}</span><span class="text-red-600">ทุน: ${ns.cost.toLocaleString()}</span><span class="${profit >= 0 ? 'text-blue-600':'text-red-600'}">กำไร: ${profit.toLocaleString()}</span></div></li>`;
             }).join('');
 
             summaryDiv.innerHTML = `
@@ -989,6 +995,41 @@
             addPartFormContainer.classList.add('hidden');
         }
 
+        function renderJobSearchResults() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+
+            if (searchTerm === '') {
+                jobSearchListContainer.innerHTML = '';
+                return;
+            }
+
+            const searchKeywords = searchTerm.split(/\s+/).filter(k => k);
+            let filteredJobs = [];
+            if (searchKeywords.length > 0) {
+                    filteredJobs = allJobs.filter(job => {
+                    const jobNameLower = job.customerName.toLowerCase();
+                    return searchKeywords.every(keyword => jobNameLower.includes(keyword));
+                });
+            }
+
+            if (filteredJobs.length === 0) {
+                jobSearchListContainer.innerHTML = '<li><p class="text-center text-gray-500 p-2">ไม่พบงานซ่อมที่ค้นหา</p></li>';
+                return;
+            }
+
+            jobSearchListContainer.innerHTML = filteredJobs.sort((a,b) => new Date(b.date) - new Date(a.date)).map(job => {
+                    const dateObj = new Date(job.date);
+                    const dateStr = dateObj.toLocaleDateString('th-TH', { year: '2-digit', month: 'short', day: 'numeric'});
+                    return `<li class="job-search-item flex items-center justify-between p-3 bg-gray-50 rounded-md border cursor-pointer hover:bg-blue-100" data-job-id="${job.id}">
+                                <div>
+                                    <p class="font-semibold text-gray-800">${job.customerName}</p>
+                                    <p class="text-sm text-gray-500">${job.device} - ${dateStr}</p>
+                                </div>
+                            </li>`;
+            }).join('');
+        }
+
+
         // --- EVENT LISTENERS & INITIALIZATION ---
         function initializeApp() {
             populateDateDropdowns();
@@ -1000,7 +1041,17 @@
             fetchAllData();
             jobsList.addEventListener('click', handleCellClick);
             summaryContainer.addEventListener('click', handleNoteSummaryClick);
-            document.getElementById('sticky-parts-btn').addEventListener('click', () => { sparePartsModal.style.display = 'flex'; });
+            stickyPartsBtn.addEventListener('click', () => { sparePartsModal.style.display = 'flex'; });
+            
+            sparePartsModal.addEventListener('click', (e) => {
+                const jobItem = e.target.closest('.job-search-item');
+                if(jobItem) {
+                    const jobId = jobItem.dataset.jobId;
+                    editJob(jobId);
+                    closeSparePartsModalBtn.click();
+                }
+            });
+
 
             revenueSelect.addEventListener('change', (e) => {
                 revenueInput.style.display = e.target.value === 'number' ? 'block' : 'none';
@@ -1015,12 +1066,16 @@
             toggleAddPartBtn.addEventListener('click', () => {
                 addPartFormContainer.classList.toggle('hidden');
             });
-            sparePartForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const partData = { id: sparePartIdInput.value || null, partName: sparePartNameInput.value.trim(), price: parseFloat(sparePartPriceInput.value) || 0 };
-                if(!partData.partName || !partData.price) { showToast('กรุณากรอกชื่อและราคาอะไหล่', 'error'); return; }
-                saveSparePart(partData);
-            });
+
+            if (sparePartForm) {
+                sparePartForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const partData = { id: sparePartIdInput.value || null, partName: sparePartNameInput.value.trim(), price: parseFloat(sparePartPriceInput.value) || 0 };
+                    if(!partData.partName || !partData.price) { showToast('กรุณากรอกชื่อและราคาอะไหล่', 'error'); return; }
+                    saveSparePart(partData);
+                });
+            }
+            
             sparePartCancelBtn.addEventListener('click', resetSparePartForm);
 
             repairForm.addEventListener('submit', (e) => {
@@ -1066,6 +1121,8 @@
             
             chartMonthSelect.addEventListener('change', renderDailyTrendChart);
             chartYearSelect.addEventListener('change', renderDailyTrendChart);
+            searchInput.addEventListener('input', renderJobSearchResults);
+
 
             profitGoalSetBtn.addEventListener('click', () => {
                 const newGoal = profitGoalInput.value;

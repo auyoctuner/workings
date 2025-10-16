@@ -49,8 +49,14 @@
 
     <div id="main-app" class="hidden min-h-screen p-4 sm:p-8 flex items-center justify-center">
         <div class="bg-white p-6 sm:p-10 rounded-xl shadow-lg w-full max-w-5xl">
-            <div class="flex justify-center items-center mb-4">
+            <div class="flex justify-between items-center mb-6 border-b pb-4">
                 <h1 class="text-3xl sm:text-4xl font-bold text-gray-800">ระบบจัดการงานซ่อม</h1>
+                <button id="logout-btn" title="ออกจากระบบ" class="flex items-center space-x-2 px-3 py-2 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                    </svg>
+                    <span class="hidden sm:inline font-medium">ออกจากระบบ</span>
+                </button>
             </div>
             
             <!-- ส่วนสำหรับดูประวัติย้อนหลัง -->
@@ -344,6 +350,7 @@
         const mainAppContainer = document.getElementById('main-app');
         const loginForm = document.getElementById('login-form');
         const loginError = document.getElementById('login-error');
+        const logoutBtn = document.getElementById('logout-btn');
         const historyMonthSelect = document.getElementById('history-month');
         const historyYearSelect = document.getElementById('history-year');
         const jobsList = document.getElementById('jobs-list');
@@ -896,13 +903,40 @@
                         legend: { display: false },
                         title: { display: true, text: `สรุปกำไรรายวันเดือน ${thaiMonths[selectedMonth-1]} ปี ${parseInt(selectedYear)+543}` },
                         tooltip: {
-                            backgroundColor: '#1f2937',
-                            titleColor: '#ffffff',
-                            bodyColor: '#ffffff',
+                            backgroundColor: 'rgba(31, 41, 55, 0.9)', // bg-gray-800 with opacity
+                            titleColor: '#f3f4f6', // text-gray-100
+                            bodyColor: '#d1d5db', // text-gray-300
+                            footerColor: '#ffffff', // text-white
+                            footerFont: {
+                                weight: 'bold'
+                            },
                             borderRadius: 8,
                             padding: 12,
                             boxPadding: 4,
-                            usePointStyle: true,
+                            callbacks: {
+                                title: function(context) {
+                                    const day = context[0].label;
+                                    const monthName = thaiMonths[selectedMonth-1];
+                                    const yearThai = parseInt(selectedYear) + 543;
+                                    return `วันที่ ${day} ${monthName} ${yearThai}`;
+                                },
+                                label: function(context) {
+                                    const index = context.dataIndex;
+                                    const revenue = dailyRevenue[index];
+                                    return `รายรับทั้งหมด: ${revenue.toLocaleString()} บาท`;
+                                },
+                                afterLabel: function(context) {
+                                    const index = context.dataIndex;
+                                    const cost = dailyCost[index];
+                                    return `ต้นทุนรวม: ${cost.toLocaleString()} บาท`;
+                                },
+                                footer: function(context) {
+                                    // The context for footer is an array of all tooltip items
+                                    const index = context[0].dataIndex;
+                                    const profit = dailyProfit[index];
+                                    return `\nกำไร: ${profit.toLocaleString()} บาท`;
+                                }
+                            }
                         }
                     },
                     scales: {
@@ -1018,7 +1052,7 @@
             const searchKeywords = searchTerm.split(/\s+/).filter(k => k);
             let filteredJobs = [];
             if (searchKeywords.length > 0) {
-                    filteredJobs = allJobs.filter(job => {
+                 filteredJobs = allJobs.filter(job => {
                     const jobNameLower = job.customerName.toLowerCase();
                     return searchKeywords.every(keyword => jobNameLower.includes(keyword));
                 });
@@ -1030,34 +1064,34 @@
             }
 
             jobSearchListContainer.innerHTML = filteredJobs.sort((a,b) => new Date(b.date) - new Date(a.date)).map(job => {
-                    const dateObj = new Date(job.date);
-                    const dateStr = dateObj.toLocaleDateString('th-TH', { year: '2-digit', month: 'short', day: 'numeric'});
-                    
-                    let revenueHTML = '';
-                    if (typeof job.revenue === 'number') {
-                        if (job.revenue < 0) {
-                             const refundAmount = Math.abs(job.revenue).toLocaleString();
-                             revenueHTML = `<span class="text-sm font-medium text-red-600">คืนเงิน(${refundAmount})</span>`;
-                        } else {
-                             revenueHTML = `<span class="text-sm font-medium text-green-600">${job.revenue.toLocaleString()} บาท</span>`;
-                        }
-                    } else if (job.revenue === 'claim') {
-                        revenueHTML = `<span class="text-sm font-medium text-red-600">งานเคลม</span>`;
-                    } else if (job.revenue === 'refund') {
-                         revenueHTML = `<span class="text-sm font-medium text-red-600">คืนเงิน</span>`;
-                    } else { // pending
-                        revenueHTML = `<span class="text-sm font-medium text-yellow-500">รอดำเนินการ</span>`;
-                    }
+                 const dateObj = new Date(job.date);
+                 const dateStr = dateObj.toLocaleDateString('th-TH', { year: '2-digit', month: 'short', day: 'numeric'});
+                 
+                 let revenueHTML = '';
+                 if (typeof job.revenue === 'number') {
+                     if (job.revenue < 0) {
+                          const refundAmount = Math.abs(job.revenue).toLocaleString();
+                          revenueHTML = `<span class="text-sm font-medium text-red-600">คืนเงิน(${refundAmount})</span>`;
+                     } else {
+                          revenueHTML = `<span class="text-sm font-medium text-green-600">${job.revenue.toLocaleString()} บาท</span>`;
+                     }
+                 } else if (job.revenue === 'claim') {
+                     revenueHTML = `<span class="text-sm font-medium text-red-600">งานเคลม</span>`;
+                 } else if (job.revenue === 'refund') {
+                      revenueHTML = `<span class="text-sm font-medium text-red-600">คืนเงิน</span>`;
+                 } else { // pending
+                     revenueHTML = `<span class="text-sm font-medium text-yellow-500">รอดำเนินการ</span>`;
+                 }
 
-                    return `<li class="job-search-item flex items-center justify-between p-3 bg-gray-50 rounded-md border cursor-pointer hover:bg-blue-100" data-job-id="${job.id}">
-                                <div>
-                                    <p class="font-semibold text-gray-800">${job.customerName}</p>
-                                    <p class="text-sm text-gray-500">${job.device} - ${dateStr}</p>
-                                </div>
-                                <div>
-                                    ${revenueHTML}
-                                </div>
-                            </li>`;
+                 return `<li class="job-search-item flex items-center justify-between p-3 bg-gray-50 rounded-md border cursor-pointer hover:bg-blue-100" data-job-id="${job.id}">
+                             <div>
+                                 <p class="font-semibold text-gray-800">${job.customerName}</p>
+                                 <p class="text-sm text-gray-500">${job.device} - ${dateStr}</p>
+                             </div>
+                             <div>
+                                 ${revenueHTML}
+                             </div>
+                         </li>`;
             }).join('');
         }
 
@@ -1194,6 +1228,14 @@
                 });
                 updateAllCheckStatus(isChecked);
                 updateSummary();
+            });
+
+            logoutBtn.addEventListener('click', () => {
+                localStorage.removeItem('isLoggedIn');
+                mainAppContainer.classList.add('hidden');
+                loginContainer.classList.remove('hidden');
+                loginForm.reset();
+                showToast('ออกจากระบบสำเร็จ', 'success');
             });
         }
         

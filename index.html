@@ -452,8 +452,9 @@
             window.handleRepairs = res => {
                 if (res.status === 'success') { 
                     allJobs = res.data; 
-                    filterAndRenderJobs(); 
+                    populateHistoryDropdowns();
                     populateChartFilterDropdowns();
+                    filterAndRenderJobs(); 
                     renderDailyTrendChart();
                 } 
                 else { showToast(res.message, 'error'); }
@@ -592,10 +593,18 @@
         }
         function populateHistoryDropdowns() {
             const today = new Date();
-            const currentMonth = today.getMonth() + 1, currentYear = today.getFullYear();
-            historyMonthSelect.innerHTML = '<option value="">ทั้งหมด</option>' + thaiMonths.map((m, i) => `<option value="${String(i+1).padStart(2,'0')}" ${i+1 === currentMonth ? 'selected' : ''}>${m}</option>`).join('');
-            const thaiYear = currentYear + 543;
-            historyYearSelect.innerHTML = '<option value="">ทั้งหมด</option>' + Array.from({length: 6}, (_, i) => `<option value="${thaiYear - i - 543}" ${thaiYear - i === thaiYear ? 'selected' : ''}>${thaiYear - i}</option>`).join('');
+            const currentMonth = today.getMonth() + 1;
+            const currentYear = today.getFullYear();
+            const years = [...new Set(allJobs.map(job => new Date(job.date).getFullYear()))].sort((a, b) => b - a);
+
+            historyMonthSelect.innerHTML = '<option value="">ทั้งหมด</option>' + thaiMonths.map((m, i) => `<option value="${String(i+1).padStart(2,'0')}">${m}</option>`).join('');
+            historyYearSelect.innerHTML = '<option value="">ทั้งหมด</option>' + years.map(year => `<option value="${year}">${year + 543}</option>`).join('');
+            
+            // Set initial selected values, matching the chart filters
+            historyMonthSelect.value = String(currentMonth).padStart(2, '0');
+             if (years.includes(currentYear)) {
+                historyYearSelect.value = currentYear;
+            }
         }
         
         function populateChartFilterDropdowns() {
@@ -612,7 +621,7 @@
             }
         }
         
-        function filterAndRenderJobs() {
+        function filterAndRenderJobs(shouldMaintainScroll = true) {
             const scrollY = window.scrollY;
             const filteredJobs = getCurrentlyFilteredJobs();
 
@@ -622,7 +631,9 @@
             renderJobs(sorted);
             updateSummary();
             renderJobCounts(sorted);
-            window.scrollTo({ top: scrollY, behavior: 'auto' });
+            if (shouldMaintainScroll) {
+                window.scrollTo({ top: scrollY, behavior: 'auto' });
+            }
         }
         function renderJobs(jobs) {
             jobsList.innerHTML = '';
@@ -1099,7 +1110,6 @@
         // --- EVENT LISTENERS & INITIALIZATION ---
         function initializeApp() {
             populateDateDropdowns();
-            populateHistoryDropdowns();
             
             const savedProfitGoal = localStorage.getItem('profitGoal');
             profitGoalInput.value = savedProfitGoal || 3000;
@@ -1186,11 +1196,32 @@
             closeNoteJobsModalBtn.addEventListener('click', () => { noteJobsModal.style.display = 'none'; });
             closeSparePartsModalBtn.addEventListener('click', () => { sparePartsModal.style.display = 'none'; });
 
-            historyMonthSelect.addEventListener('change', filterAndRenderJobs);
-            historyYearSelect.addEventListener('change', filterAndRenderJobs);
+            const handleFilterChange = (event) => {
+                const sourceElement = event.target;
+                const newValue = sourceElement.value;
+                const isChartFilter = sourceElement === chartMonthSelect || sourceElement === chartYearSelect;
+
+                // Sync values across history and chart filters
+                if (sourceElement === historyMonthSelect) {
+                    chartMonthSelect.value = newValue;
+                } else if (sourceElement === chartMonthSelect) {
+                    historyMonthSelect.value = newValue;
+                } else if (sourceElement === historyYearSelect) {
+                    chartYearSelect.value = newValue;
+                } else if (sourceElement === chartYearSelect) {
+                    historyYearSelect.value = newValue;
+                }
+
+                // Re-render both the job list and the chart
+                filterAndRenderJobs(!isChartFilter);
+                renderDailyTrendChart();
+            };
+
+            historyMonthSelect.addEventListener('change', handleFilterChange);
+            historyYearSelect.addEventListener('change', handleFilterChange);
+            chartMonthSelect.addEventListener('change', handleFilterChange);
+            chartYearSelect.addEventListener('change', handleFilterChange);
             
-            chartMonthSelect.addEventListener('change', renderDailyTrendChart);
-            chartYearSelect.addEventListener('change', renderDailyTrendChart);
             searchInput.addEventListener('input', renderJobSearchResults);
 
 

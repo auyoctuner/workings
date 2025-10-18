@@ -202,7 +202,7 @@
                             </div>
                         </div>
                     </div>
-                     <div class="flex-shrink-0 self-start sm:self-end">
+                     <div class="flex-shrink-0 self-start sm:self-end flex items-center gap-4">
                         <div class="inline-flex rounded-md shadow-sm bg-gray-200 p-1">
                             <button id="show-daily-chart-btn" class="chart-toggle-btn active px-4 py-2 text-sm font-medium rounded-md">รายวัน</button>
                             <button id="show-monthly-chart-btn" class="chart-toggle-btn px-4 py-2 text-sm font-medium rounded-md">รายเดือน</button>
@@ -218,6 +218,11 @@
                             <button type="button" id="profit-goal-set-btn" class="px-3 py-1 bg-blue-500 text-white rounded-md text-xs font-medium hover:bg-blue-600 whitespace-nowrap">ตั้งค่า</button>
                         </div>
                     </div>
+                     <button id="manage-holidays-btn" title="จัดการวันหยุด" class="absolute bottom-4 left-4 p-1.5 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 z-10">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </button>
                     <canvas id="main-chart"></canvas>
                     <p id="chart-placeholder" class="text-center text-gray-500 py-16">กรุณาเลือกเดือนและปีเพื่อแสดงกราฟ</p>
                 </div>
@@ -261,6 +266,22 @@
                     </ul>
                 </div>
                 
+            </div>
+        </div>
+        
+        <!-- Holiday Management Modal -->
+        <div id="holidays-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-lg p-6 shadow-xl w-full max-w-md">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 id="holidays-modal-title" class="text-lg font-bold text-gray-900">จัดการวันหยุด</h3>
+                    <button id="close-holidays-modal" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+                </div>
+                <div id="holidays-calendar-header" class="grid grid-cols-7 gap-2 text-center text-xs font-bold text-gray-500 mb-2">
+                    <!-- Day of week headers will be populated here -->
+                </div>
+                <div id="holidays-grid" class="grid grid-cols-7 gap-2 text-center">
+                    <!-- Day buttons will be populated here -->
+                </div>
             </div>
         </div>
 
@@ -353,6 +374,7 @@
         let deleteCallback = null; // To handle different delete types
         let mainChartInstance = null; // To hold the chart instance
         let currentChartView = 'daily';
+        let holidaysForCurrentMonth = [];
 
         // --- UI ELEMENTS ---
         const loginContainer = document.getElementById('login-container');
@@ -414,6 +436,12 @@
         const chartTitle = document.getElementById('chart-title');
         const chartMonthFilter = document.getElementById('chart-month-filter');
         const profitGoalContainer = document.getElementById('profit-goal-container');
+        const holidaysModal = document.getElementById('holidays-modal');
+        const closeHolidaysModalBtn = document.getElementById('close-holidays-modal');
+        const holidaysModalTitle = document.getElementById('holidays-modal-title');
+        const holidaysGrid = document.getElementById('holidays-grid');
+        const holidaysCalendarHeader = document.getElementById('holidays-calendar-header');
+        const manageHolidaysBtn = document.getElementById('manage-holidays-btn');
 
 
         // --- UTILITY FUNCTIONS ---
@@ -454,7 +482,44 @@
             document.getElementById('handleGenericResponse')?.remove();
         };
 
+        function toggleHoliday(year, month, day) {
+            const dayInt = parseInt(day);
+            const dayIndex = holidaysForCurrentMonth.indexOf(dayInt);
+
+            if (dayIndex > -1) {
+                holidaysForCurrentMonth.splice(dayIndex, 1);
+            } else {
+                holidaysForCurrentMonth.push(dayInt);
+            }
+            saveHolidaysToServer(year, month, holidaysForCurrentMonth);
+            renderChart(); 
+        }
+
         // --- API & DATA FUNCTIONS ---
+        function fetchHolidays(year, month, callback) {
+            window.handleGetHolidays = res => {
+                if (res.status === 'success') {
+                    holidaysForCurrentMonth = res.data.map(d => parseInt(d)); // Ensure days are numbers
+                    if (callback) callback();
+                } else {
+                    showToast('ไม่สามารถโหลดข้อมูลวันหยุดได้', 'error');
+                }
+                document.getElementById('handleGetHolidays')?.remove();
+            };
+            callApi('get_holidays', { year: year, month: month }, 'handleGetHolidays');
+        }
+
+        function saveHolidaysToServer(year, month, holidays) {
+             window.handleSaveHolidays = res => {
+                if (res.status !== 'success') {
+                    showToast('เกิดข้อผิดพลาดในการบันทึกวันหยุด', 'error');
+                }
+                document.getElementById('handleSaveHolidays')?.remove();
+            };
+            const dataToSave = { year: year, month: month, holidays: holidays };
+            callApi('save_holidays', { data: dataToSave }, 'handleSaveHolidays');
+        }
+
         function fetchAllData() {
             fetchJobs();
             fetchNotes();
@@ -825,16 +890,11 @@
         }
 
         function renderDailyTrendChart() {
-            const chartCanvas = document.getElementById('main-chart');
-            const chartPlaceholder = document.getElementById('chart-placeholder');
-            const chartSummaryContainer = document.getElementById('chart-summary-container');
             const selectedMonth = chartMonthSelect.value;
             const selectedYear = chartYearSelect.value;
-            const profitGoal = parseFloat(profitGoalInput.value) || 3000;
-
-            chartSummaryContainer.innerHTML = '';
-
             if (!selectedMonth || !selectedYear) {
+                const chartCanvas = document.getElementById('main-chart');
+                const chartPlaceholder = document.getElementById('chart-placeholder');
                 chartCanvas.classList.add('hidden');
                 chartPlaceholder.classList.remove('hidden');
                 chartPlaceholder.textContent = 'กรุณาเลือกเดือนและปีเพื่อแสดงกราฟ';
@@ -845,179 +905,249 @@
                 return;
             }
 
-            const jobsForChart = allJobs.filter(job => {
-                const jobDate = new Date(job.date);
-                return jobDate.getFullYear() == selectedYear && (jobDate.getMonth() + 1) == selectedMonth;
-            });
+            fetchHolidays(selectedYear, selectedMonth, () => {
+                const chartCanvas = document.getElementById('main-chart');
+                const chartPlaceholder = document.getElementById('chart-placeholder');
+                const chartSummaryContainer = document.getElementById('chart-summary-container');
+                const profitGoal = parseFloat(profitGoalInput.value) || 3000;
+                const holidays = holidaysForCurrentMonth;
 
-            if (jobsForChart.length === 0) {
-                chartCanvas.classList.add('hidden');
-                chartPlaceholder.classList.remove('hidden');
-                chartPlaceholder.textContent = 'ไม่มีข้อมูลสำหรับเดือนและปีที่เลือก';
+                chartSummaryContainer.innerHTML = '';
+
+                const jobsForChart = allJobs.filter(job => {
+                    const jobDate = new Date(job.date);
+                    return jobDate.getFullYear() == selectedYear && (jobDate.getMonth() + 1) == selectedMonth;
+                });
+
+                if (jobsForChart.length === 0 && holidays.length === 0) {
+                    chartCanvas.classList.add('hidden');
+                    chartPlaceholder.classList.remove('hidden');
+                    chartPlaceholder.textContent = 'ไม่มีข้อมูลสำหรับเดือนและปีที่เลือก';
+                    if (mainChartInstance) {
+                        mainChartInstance.destroy();
+                        mainChartInstance = null;
+                    }
+                    return;
+                }
+
+                chartCanvas.classList.remove('hidden');
+                chartPlaceholder.classList.add('hidden');
+
+                const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+                const labels = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+                const dailyRevenue = Array(daysInMonth).fill(0);
+                const dailyCost = Array(daysInMonth).fill(0);
+
+                jobsForChart.forEach(job => {
+                    const dayOfMonth = new Date(job.date).getDate() - 1; 
+                    if (typeof job.revenue === 'number' && job.revenue > 0) {
+                        dailyRevenue[dayOfMonth] += job.revenue;
+                    }
+                    if (typeof job.cost === 'number') {
+                        dailyCost[dayOfMonth] += job.cost;
+                    }
+                });
+
+                const dailyProfit = dailyRevenue.map((revenue, index) => revenue - dailyCost[index]);
+                
+                const totalProfit = dailyProfit.reduce((sum, p) => sum + p, 0);
+
+                const revenueDaysCount = dailyRevenue.filter((r, index) => {
+                    return r > 0 || dailyCost[index] > 0;
+                }).length;
+
+                const successfulDays = dailyProfit.filter((p, index) => {
+                    return p >= profitGoal;
+                }).length;
+
+                const averageProfit = revenueDaysCount > 0 ? totalProfit / revenueDaysCount : 0;
+                const successPercentage = revenueDaysCount > 0 ? (successfulDays / revenueDaysCount) * 100 : 0;
+
+
+                chartSummaryContainer.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                        <div class="p-3 rounded-lg bg-blue-100 text-blue-800 flex flex-col justify-center">
+                            <p class="text-sm font-medium">กำไรรวมทั้งเดือน</p>
+                            <p class="text-2xl font-bold">${totalProfit.toLocaleString('th-TH')} บาท</p>
+                        </div>
+                        <div class="p-3 rounded-lg bg-green-100 text-green-800 flex flex-col justify-center">
+                            <p class="text-sm font-medium">เฉลี่ยกำไร/วัน</p>
+                            <p class="text-2xl font-bold">${averageProfit.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท</p>
+                        </div>
+                        <div class="p-3 rounded-lg bg-purple-100 text-purple-800 flex flex-col justify-center">
+                            <p class="text-sm font-medium">สำเร็จตามเป้าหมาย</p>
+                            <p class="text-2xl font-bold">${successPercentage.toFixed(1)}%</p>
+                            <p class="text-xs text-purple-600">(${successfulDays} จาก ${revenueDaysCount} วันทำงาน)</p>
+                        </div>
+                    </div>
+                `;
+
                 if (mainChartInstance) {
                     mainChartInstance.destroy();
-                    mainChartInstance = null;
                 }
-                return;
-            }
-
-            chartCanvas.classList.remove('hidden');
-            chartPlaceholder.classList.add('hidden');
-
-            const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
-            const labels = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-
-            const dailyRevenue = Array(daysInMonth).fill(0);
-            const dailyCost = Array(daysInMonth).fill(0);
-
-            jobsForChart.forEach(job => {
-                const dayOfMonth = new Date(job.date).getDate() - 1; 
-                if (typeof job.revenue === 'number' && job.revenue > 0) {
-                    dailyRevenue[dayOfMonth] += job.revenue;
-                }
-                if (typeof job.cost === 'number') {
-                    dailyCost[dayOfMonth] += job.cost;
-                }
-            });
-
-            const dailyProfit = dailyRevenue.map((revenue, index) => revenue - dailyCost[index]);
-            
-            const totalProfit = dailyProfit.reduce((sum, p) => sum + p, 0);
-            const revenueDaysCount = dailyRevenue.filter(r => r > 0).length;
-            const averageProfit = revenueDaysCount > 0 ? totalProfit / revenueDaysCount : 0;
-            const successfulDays = dailyProfit.filter(p => p >= profitGoal).length;
-            const successPercentage = revenueDaysCount > 0 ? (successfulDays / revenueDaysCount) * 100 : 0;
-
-
-            chartSummaryContainer.innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                    <div class="p-3 rounded-lg bg-blue-100 text-blue-800 flex flex-col justify-center">
-                        <p class="text-sm font-medium">กำไรรวมทั้งเดือน</p>
-                        <p class="text-2xl font-bold">${totalProfit.toLocaleString('th-TH')} บาท</p>
-                    </div>
-                    <div class="p-3 rounded-lg bg-green-100 text-green-800 flex flex-col justify-center">
-                        <p class="text-sm font-medium">เฉลี่ยกำไร/วัน (เฉพาะวันที่มีรายรับ)</p>
-                        <p class="text-2xl font-bold">${averageProfit.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท</p>
-                    </div>
-                    <div class="p-3 rounded-lg bg-purple-100 text-purple-800 flex flex-col justify-center">
-                        <p class="text-sm font-medium">สำเร็จตามเป้าหมาย</p>
-                        <p class="text-2xl font-bold">${successPercentage.toFixed(1)}%</p>
-                        <p class="text-xs text-purple-600">(${successfulDays} จาก ${revenueDaysCount} วันที่มีรายรับ)</p>
-                    </div>
-                </div>
-            `;
-
-            if (mainChartInstance) {
-                mainChartInstance.destroy();
-            }
-            
-            const ctx = chartCanvas.getContext('2d');
-            mainChartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'กำไร',
-                            data: dailyProfit,
-                            backgroundColor: dailyProfit.map(p => p >= profitGoal ? 'rgba(52, 211, 153, 0.8)' : 'rgba(248, 113, 113, 0.8)'),
-                            hoverBackgroundColor: dailyProfit.map(p => p >= profitGoal ? 'rgba(16, 185, 129, 1)' : 'rgba(239, 68, 68, 1)'),
-                            borderRadius: 6,
-                            borderWidth: 0,
-                            hoverBorderWidth: 2,
-                            hoverBorderColor: 'rgba(31, 41, 55, 0.5)'
-                        }
-                    ]
-                },
-                options: {
-                    onClick: (event, elements) => {
-                        if (elements.length > 0) {
-                            const chartElement = elements[0];
-                            const dayIndex = chartElement.index;
-                            const day = dayIndex + 1;
-                            const month = chartMonthSelect.value;
-                            const year = chartYearSelect.value;
-                            showJobsForDayModal(day, month, year);
-                        }
-                    },
-                    onHover: (event, chartElement) => {
-                        const canvas = event.native.target;
-                        canvas.style.cursor = chartElement[0] ? 'pointer' : 'default';
-                    },
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false },
-                        title: { display: true, text: `สรุปกำไรรายวันเดือน ${thaiMonths[selectedMonth-1]} ปี ${parseInt(selectedYear)+543}` },
-                        tooltip: {
-                            backgroundColor: 'rgba(31, 41, 55, 0.9)',
-                            titleColor: '#f3f4f6',
-                            bodyColor: '#d1d5db',
-                            footerColor: '#ffffff',
-                            footerFont: { weight: 'bold' },
-                            borderRadius: 8,
-                            padding: 12,
-                            boxPadding: 4,
-                            callbacks: {
-                                title: function(context) {
-                                    const day = context[0].label;
-                                    const monthName = thaiMonths[selectedMonth-1];
-                                    const yearThai = parseInt(selectedYear) + 543;
-                                    return `วันที่ ${day} ${monthName} ${yearThai}`;
-                                },
-                                label: function(context) {
-                                    const index = context.dataIndex;
-                                    const revenue = dailyRevenue[index];
-                                    return `รายรับทั้งหมด: ${revenue.toLocaleString()} บาท`;
-                                },
-                                afterLabel: function(context) {
-                                    const index = context.dataIndex;
-                                    const cost = dailyCost[index];
-                                    return `ต้นทุนรวม: ${cost.toLocaleString()} บาท`;
-                                },
-                                footer: function(context) {
-                                    if (context.length > 0) {
-                                        const index = context[0].dataIndex;
-                                        const profit = dailyProfit[index];
-                                        if (typeof profit === 'number') {
-                                            return `\nกำไร: ${profit.toLocaleString()} บาท`;
-                                        }
+                
+                const ctx = chartCanvas.getContext('2d');
+                mainChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'กำไร',
+                                data: dailyProfit,
+                                backgroundColor: dailyProfit.map((p, index) => {
+                                    const day = labels[index];
+                                    if (holidays.includes(day)) {
+                                        return 'rgba(156, 163, 175, 0.7)'; // gray-400
                                     }
-                                    return '';
+                                    return p >= profitGoal ? 'rgba(52, 211, 153, 0.8)' : 'rgba(248, 113, 113, 0.8)';
+                                }),
+                                hoverBackgroundColor: dailyProfit.map((p, index) => {
+                                    const day = labels[index];
+                                    if (holidays.includes(day)) {
+                                        return 'rgba(107, 114, 128, 1)'; // gray-500
+                                    }
+                                    return p >= profitGoal ? 'rgba(16, 185, 129, 1)' : 'rgba(239, 68, 68, 1)';
+                                }),
+                                borderRadius: 6,
+                                borderWidth: 0,
+                                hoverBorderWidth: 2,
+                                hoverBorderColor: 'rgba(31, 41, 55, 0.5)'
+                            }
+                        ]
+                    },
+                    options: {
+                        onClick: (event, elements, chart) => {
+                            if (currentChartView !== 'daily') return;
+                            if (elements.length > 0) {
+                                const chartElement = elements[0];
+                                const dayIndex = chartElement.index;
+                                const day = dayIndex + 1;
+                                showJobsForDayModal(day, selectedMonth, selectedYear);
+                            }
+                        },
+                        onHover: (event, chartElement, chart) => {
+                            const canvas = event.native.target;
+                            canvas.style.cursor = chartElement[0] ? 'pointer' : 'default';
+                        },
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false },
+                            title: { display: true, text: `สรุปกำไรรายวันเดือน ${thaiMonths[selectedMonth-1]} ปี ${parseInt(selectedYear)+543}` },
+                            tooltip: {
+                                backgroundColor: 'rgba(31, 41, 55, 0.9)',
+                                titleColor: '#f3f4f6',
+                                bodyColor: '#d1d5db',
+                                footerColor: '#ffffff',
+                                footerFont: { weight: 'bold' },
+                                borderRadius: 8,
+                                padding: 12,
+                                boxPadding: 4,
+                                callbacks: {
+                                    title: function(context) {
+                                        if (!context.length) return '';
+                                        const day = context[0].label;
+                                        const monthName = thaiMonths[selectedMonth-1];
+                                        const yearThai = parseInt(selectedYear) + 543;
+                                        return `วันที่ ${day} ${monthName} ${yearThai}`;
+                                    },
+                                    label: function(context) {
+                                        if (context.dataIndex >= 0 && context.dataIndex < dailyRevenue.length) {
+                                            const index = context.dataIndex;
+                                            const revenue = dailyRevenue[index];
+                                            if (typeof revenue === 'number') {
+                                                 return `รายรับทั้งหมด: ${revenue.toLocaleString()} บาท`;
+                                            }
+                                        }
+                                        return '';
+                                    },
+                                    afterLabel: function(context) {
+                                        if (context.dataIndex >= 0 && context.dataIndex < dailyCost.length) {
+                                            const index = context.dataIndex;
+                                            const cost = dailyCost[index];
+                                            if (typeof cost === 'number') {
+                                                return `ต้นทุนรวม: ${cost.toLocaleString()} บาท`;
+                                            }
+                                        }
+                                        return '';
+                                    },
+                                    footer: function(context) {
+                                        if (context.length > 0) {
+                                            const index = context[0].dataIndex;
+                                            if (index >= 0 && index < dailyProfit.length) {
+                                                const day = index + 1;
+                                                const profit = dailyProfit[index];
+                                                if (holidays.includes(day)) {
+                                                    return '\nวันหยุด';
+                                                }
+                                                if (typeof profit === 'number') {
+                                                    return `\nกำไร: ${profit.toLocaleString()} บาท`;
+                                                }
+                                            }
+                                        }
+                                        return '';
+                                    }
                                 }
                             }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                 grid: { color: '#e5e7eb' }
+                            },
+                            x: {
+                                 grid: { display: false },
+                                 ticks: {
+                                    maxRotation: 0,
+                                    minRotation: 0,
+                                    callback: function(value, index) {
+                                        const day = this.getLabelForValue(value);
+                                        if(holidays.includes(parseInt(day))) {
+                                            return 'หยุด';
+                                        }
+                                        return day;
+                                    },
+                                    color: function(context) {
+                                        const day = context.chart.data.labels[context.index];
+                                        if(holidays.includes(day)) {
+                                            return 'red';
+                                        }
+                                        return '#6B7280'; // gray-500
+                                    },
+                                    font: function(context) {
+                                        const day = context.chart.data.labels[context.index];
+                                        if(holidays.includes(day)) {
+                                            return { size: 10 };
+                                        }
+                                        return { size: 12 };
+                                    }
+                                 }
+                            }
                         }
                     },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                             grid: { color: '#e5e7eb' }
-                        },
-                        x: {
-                             grid: { display: false }
+                    plugins: [{
+                        id: 'customDataLabels',
+                        afterDatasetsDraw: (chart) => {
+                            const { ctx } = chart;
+                            ctx.save();
+                            ctx.font = '11px Sarabun';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'bottom';
+                            const profitDatasetMeta = chart.getDatasetMeta(0);
+                            profitDatasetMeta.data.forEach((bar, index) => {
+                                const data = chart.data.datasets[0].data[index];
+                                if (data !== null && data !== 0) {
+                                    const value = data.toLocaleString();
+                                    const yPos = bar.y + (data >= 0 ? -5 : 18); 
+                                    ctx.fillStyle = data >= 0 ? 'rgba(0, 0, 0, 0.8)' : 'rgba(200, 0, 0, 1)';
+                                    ctx.fillText(value, bar.x, yPos);
+                                }
+                            });
+                            ctx.restore();
                         }
-                    }
-                },
-                plugins: [{
-                    id: 'customDataLabels',
-                    afterDatasetsDraw: (chart) => {
-                        const { ctx } = chart;
-                        ctx.save();
-                        ctx.font = '11px Sarabun';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'bottom';
-                        const profitDatasetMeta = chart.getDatasetMeta(0);
-                        profitDatasetMeta.data.forEach((bar, index) => {
-                            const data = chart.data.datasets[0].data[index];
-                            if (data !== null && data !== 0) {
-                                const value = data.toLocaleString();
-                                const yPos = bar.y + (data >= 0 ? -5 : 18); 
-                                ctx.fillStyle = data >= 0 ? 'rgba(0, 0, 0, 0.8)' : 'rgba(200, 0, 0, 1)';
-                                ctx.fillText(value, bar.x, yPos);
-                            }
-                        });
-                        ctx.restore();
-                    }
-                }]
+                    }]
+                });
             });
         }
 
@@ -1121,21 +1251,33 @@
                                     return `${monthName} ${yearThai}`;
                                 },
                                 label: function(context) {
-                                    const index = context.dataIndex;
-                                    const revenue = monthlyRevenues[index];
-                                    return `รายรับทั้งหมด: ${revenue.toLocaleString()} บาท`;
+                                    if (context.dataIndex >= 0 && context.dataIndex < monthlyRevenues.length) {
+                                        const index = context.dataIndex;
+                                        const revenue = monthlyRevenues[index];
+                                        if (typeof revenue === 'number') {
+                                            return `รายรับทั้งหมด: ${revenue.toLocaleString()} บาท`;
+                                        }
+                                    }
+                                    return '';
                                 },
                                 afterLabel: function(context) {
-                                    const index = context.dataIndex;
-                                    const cost = monthlyCosts[index];
-                                    return `ต้นทุนรวม: ${cost.toLocaleString()} บาท`;
+                                     if (context.dataIndex >= 0 && context.dataIndex < monthlyCosts.length) {
+                                        const index = context.dataIndex;
+                                        const cost = monthlyCosts[index];
+                                        if (typeof cost === 'number') {
+                                            return `ต้นทุนรวม: ${cost.toLocaleString()} บาท`;
+                                        }
+                                    }
+                                    return '';
                                 },
                                 footer: function(context) {
                                     if (context.length > 0) {
                                         const index = context[0].dataIndex;
-                                        const profit = monthlyProfits[index];
-                                        if (typeof profit === 'number') {
-                                            return `\nกำไร: ${profit.toLocaleString()} บาท`;
+                                        if (index >= 0 && index < monthlyProfits.length) {
+                                            const profit = monthlyProfits[index];
+                                            if (typeof profit === 'number') {
+                                                return `\nกำไร: ${profit.toLocaleString()} บาท`;
+                                            }
                                         }
                                     }
                                     return '';
@@ -1285,6 +1427,54 @@
                              </div>
                          </li>`;
             }).join('');
+        }
+
+        function openHolidaysModal() {
+            const selectedMonth = chartMonthSelect.value;
+            const selectedYear = chartYearSelect.value;
+
+            if (!selectedMonth || !selectedYear) {
+                showToast('กรุณาเลือกเดือนและปีก่อน', 'error');
+                return;
+            }
+
+            holidaysModalTitle.textContent = `จัดการวันหยุด - ${thaiMonths[selectedMonth-1]} ${parseInt(selectedYear)+543}`;
+            const holidays = holidaysForCurrentMonth;
+            const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+            const startDay = new Date(selectedYear, selectedMonth - 1, 1).getDay(); // 0 = Sunday, 1 = Monday, ...
+
+            holidaysGrid.innerHTML = '';
+            holidaysCalendarHeader.innerHTML = '';
+
+            const dayNames = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+            dayNames.forEach(name => {
+                const dayHeader = document.createElement('div');
+                dayHeader.textContent = name;
+                holidaysCalendarHeader.appendChild(dayHeader);
+            });
+
+            // Add empty cells for the days before the 1st of the month
+            for (let i = 0; i < startDay; i++) {
+                holidaysGrid.appendChild(document.createElement('div'));
+            }
+
+            for (let i = 1; i <= daysInMonth; i++) {
+                const day = i;
+                const button = document.createElement('button');
+                button.textContent = day;
+                button.className = 'p-2 rounded-full w-10 h-10 mx-auto flex items-center justify-center transition-colors';
+                if (holidays.includes(day)) {
+                    button.classList.add('bg-blue-500', 'text-white', 'font-bold');
+                } else {
+                    button.classList.add('bg-gray-200', 'hover:bg-gray-300');
+                }
+                button.onclick = () => {
+                    toggleHoliday(selectedYear, selectedMonth, day);
+                    openHolidaysModal(); 
+                };
+                holidaysGrid.appendChild(button);
+            }
+            holidaysModal.style.display = 'flex';
         }
 
 
@@ -1438,6 +1628,7 @@
                 showMonthlyChartBtn.classList.remove('active');
                 chartMonthFilter.style.display = 'block';
                 profitGoalContainer.style.display = 'block';
+                manageHolidaysBtn.style.display = 'inline-flex';
                 renderChart();
             });
 
@@ -1448,7 +1639,13 @@
                 showDailyChartBtn.classList.remove('active');
                 chartMonthFilter.style.display = 'none';
                 profitGoalContainer.style.display = 'none';
+                manageHolidaysBtn.style.display = 'none';
                 renderChart();
+            });
+            
+            manageHolidaysBtn.addEventListener('click', openHolidaysModal);
+            closeHolidaysModalBtn.addEventListener('click', () => {
+                holidaysModal.style.display = 'none';
             });
 
         }
@@ -1759,4 +1956,8 @@
     </script>
 </body>
 </html>
+
+
+
+
 

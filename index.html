@@ -27,6 +27,13 @@
             background-color: #f9fafb; /* gray-50 */
             cursor: pointer;
         }
+        .chart-toggle-btn {
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .chart-toggle-btn.active {
+            background-color: #3b82f6; /* bg-blue-600 */
+            color: white;
+        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -49,14 +56,8 @@
 
     <div id="main-app" class="hidden min-h-screen p-4 sm:p-8 flex items-center justify-center">
         <div class="bg-white p-6 sm:p-10 rounded-xl shadow-lg w-full max-w-5xl">
-            <div class="flex justify-between items-center mb-6 border-b pb-4">
+            <div class="flex justify-center items-center mb-4">
                 <h1 class="text-3xl sm:text-4xl font-bold text-gray-800">ระบบจัดการงานซ่อม</h1>
-                <button id="logout-btn" title="ออกจากระบบ" class="flex items-center space-x-2 px-3 py-2 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                    </svg>
-                    <span class="hidden sm:inline font-medium">ออกจากระบบ</span>
-                </button>
             </div>
             
             <!-- ส่วนสำหรับดูประวัติย้อนหลัง -->
@@ -183,11 +184,11 @@
             <!-- กราฟแนวโน้มรายวัน -->
             <hr class="my-8 border-t-2 border-gray-200">
             <div id="chart-section">
-                <div class="flex justify-between items-start mb-4">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
                     <div>
-                        <h2 class="text-xl font-semibold text-gray-700">กำไรรายวัน</h2>
+                        <h2 id="chart-title" class="text-xl font-semibold text-gray-700">กำไรรายวัน</h2>
                         <div class="flex flex-col sm:flex-row gap-4 mt-2">
-                            <div class="flex-1">
+                            <div id="chart-month-filter" class="flex-1">
                                 <label for="chart-month-select" class="block text-sm font-medium text-gray-700">เลือกเดือน</label>
                                 <select id="chart-month-select" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
                                     <!-- Options populated by JS -->
@@ -201,17 +202,23 @@
                             </div>
                         </div>
                     </div>
+                     <div class="flex-shrink-0 self-start sm:self-end">
+                        <div class="inline-flex rounded-md shadow-sm bg-gray-200 p-1">
+                            <button id="show-daily-chart-btn" class="chart-toggle-btn active px-4 py-2 text-sm font-medium rounded-md">รายวัน</button>
+                            <button id="show-monthly-chart-btn" class="chart-toggle-btn px-4 py-2 text-sm font-medium rounded-md">รายเดือน</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="chart-container" class="bg-gray-50 p-4 rounded-lg shadow-inner relative">
-                    <div class="absolute top-2 right-2 z-10">
+                    <div id="profit-goal-container" class="absolute top-2 right-2 z-10">
                         <label for="profit-goal-input" class="block text-xs font-medium text-gray-600 mb-1 text-right">เป้าหมายกำไร/วัน</label>
                         <div class="flex items-center space-x-1">
                             <input type="number" id="profit-goal-input" class="block w-24 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
                             <button type="button" id="profit-goal-set-btn" class="px-3 py-1 bg-blue-500 text-white rounded-md text-xs font-medium hover:bg-blue-600 whitespace-nowrap">ตั้งค่า</button>
                         </div>
                     </div>
-                    <canvas id="daily-trend-chart"></canvas>
+                    <canvas id="main-chart"></canvas>
                     <p id="chart-placeholder" class="text-center text-gray-500 py-16">กรุณาเลือกเดือนและปีเพื่อแสดงกราฟ</p>
                 </div>
                 <div id="chart-summary-container" class="mt-4"></div>
@@ -329,6 +336,7 @@
                 </svg>
             </button>
         </div>
+
     </div>
     
     <div class="toast-container" id="toast-container"></div>
@@ -343,14 +351,14 @@
         let allJobs = [];
         let allSpareParts = [];
         let deleteCallback = null; // To handle different delete types
-        let dailyChartInstance = null; // To hold the chart instance
+        let mainChartInstance = null; // To hold the chart instance
+        let currentChartView = 'daily';
 
         // --- UI ELEMENTS ---
         const loginContainer = document.getElementById('login-container');
         const mainAppContainer = document.getElementById('main-app');
         const loginForm = document.getElementById('login-form');
         const loginError = document.getElementById('login-error');
-        const logoutBtn = document.getElementById('logout-btn');
         const historyMonthSelect = document.getElementById('history-month');
         const historyYearSelect = document.getElementById('history-year');
         const jobsList = document.getElementById('jobs-list');
@@ -401,6 +409,11 @@
         const profitGoalSetBtn = document.getElementById('profit-goal-set-btn');
         const searchInput = document.getElementById('search-input');
         const jobSearchListContainer = document.getElementById('job-search-list-container');
+        const showDailyChartBtn = document.getElementById('show-daily-chart-btn');
+        const showMonthlyChartBtn = document.getElementById('show-monthly-chart-btn');
+        const chartTitle = document.getElementById('chart-title');
+        const chartMonthFilter = document.getElementById('chart-month-filter');
+        const profitGoalContainer = document.getElementById('profit-goal-container');
 
 
         // --- UTILITY FUNCTIONS ---
@@ -455,7 +468,7 @@
                     populateHistoryDropdowns();
                     populateChartFilterDropdowns();
                     filterAndRenderJobs(); 
-                    renderDailyTrendChart();
+                    renderChart();
                 } 
                 else { showToast(res.message, 'error'); }
                 document.getElementById('handleRepairs')?.remove();
@@ -635,6 +648,7 @@
                 window.scrollTo({ top: scrollY, behavior: 'auto' });
             }
         }
+
         function renderJobs(jobs) {
             jobsList.innerHTML = '';
             if (!jobs || jobs.length === 0) {
@@ -652,7 +666,17 @@
                 const row = jobsList.insertRow();
                 row.dataset.id = job.id;
                 const isRefund = job.revenue === 'claim' || job.revenue === 'refund' || (typeof job.revenue === 'number' && job.revenue < 0);
-                row.className = isRefund ? 'bg-red-100' : (job.isChecked ? 'bg-green-50' : '');
+                const isZeroRevenue = typeof job.revenue === 'number' && job.revenue === 0;
+
+                let rowClass = '';
+                if (isZeroRevenue) {
+                    rowClass = 'bg-yellow-100';
+                } else if (isRefund) {
+                    rowClass = 'bg-red-100';
+                } else if (job.isChecked) {
+                    rowClass = 'bg-green-50';
+                }
+                row.className = rowClass;
                 
                 let revenueHTML = '', costHTML = '';
                 if (job.revenue === 'claim') {
@@ -676,6 +700,7 @@
             document.querySelectorAll('.job-checkbox').forEach(cb => cb.addEventListener('change', handleJobCheckboxChange));
             updateCheckAllState();
         }
+
         function updateCheckAllState() {
             const checkboxes = document.querySelectorAll('#jobs-list .job-checkbox');
             const total = checkboxes.length;
@@ -684,12 +709,14 @@
             checkAllJobs.checked = checkedCount === total;
             checkAllJobs.indeterminate = checkedCount > 0 && checkedCount < total;
         }
+
         function handleJobCheckboxChange(e) {
             const isChecked = e.target.checked, jobId = e.target.dataset.id, row = e.target.closest('tr');
             const job = allJobs.find(j => j.id === jobId);
             if (job) job.isChecked = isChecked;
             const isRefund = job.revenue === 'claim' || job.revenue === 'refund' || (typeof job.revenue === 'number' && job.revenue < 0);
-            if (!isRefund) row.classList.toggle('bg-green-50', isChecked);
+            const isZeroRevenue = typeof job.revenue === 'number' && job.revenue === 0;
+            if (!isRefund && !isZeroRevenue) row.classList.toggle('bg-green-50', isChecked);
             updateSummary();
             updateCheckStatus(jobId, isChecked);
             updateCheckAllState();
@@ -789,8 +816,16 @@
             summaryContainer.appendChild(summaryDiv);
         }
 
+        function renderChart() {
+            if (currentChartView === 'daily') {
+                renderDailyTrendChart();
+            } else {
+                renderMonthlyTrendChart();
+            }
+        }
+
         function renderDailyTrendChart() {
-            const chartCanvas = document.getElementById('daily-trend-chart');
+            const chartCanvas = document.getElementById('main-chart');
             const chartPlaceholder = document.getElementById('chart-placeholder');
             const chartSummaryContainer = document.getElementById('chart-summary-container');
             const selectedMonth = chartMonthSelect.value;
@@ -803,9 +838,9 @@
                 chartCanvas.classList.add('hidden');
                 chartPlaceholder.classList.remove('hidden');
                 chartPlaceholder.textContent = 'กรุณาเลือกเดือนและปีเพื่อแสดงกราฟ';
-                if (dailyChartInstance) {
-                    dailyChartInstance.destroy();
-                    dailyChartInstance = null;
+                if (mainChartInstance) {
+                    mainChartInstance.destroy();
+                    mainChartInstance = null;
                 }
                 return;
             }
@@ -819,9 +854,9 @@
                 chartCanvas.classList.add('hidden');
                 chartPlaceholder.classList.remove('hidden');
                 chartPlaceholder.textContent = 'ไม่มีข้อมูลสำหรับเดือนและปีที่เลือก';
-                if (dailyChartInstance) {
-                    dailyChartInstance.destroy();
-                    dailyChartInstance = null;
+                if (mainChartInstance) {
+                    mainChartInstance.destroy();
+                    mainChartInstance = null;
                 }
                 return;
             }
@@ -872,12 +907,12 @@
                 </div>
             `;
 
-            if (dailyChartInstance) {
-                dailyChartInstance.destroy();
+            if (mainChartInstance) {
+                mainChartInstance.destroy();
             }
             
             const ctx = chartCanvas.getContext('2d');
-            dailyChartInstance = new Chart(ctx, {
+            mainChartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: labels,
@@ -914,13 +949,11 @@
                         legend: { display: false },
                         title: { display: true, text: `สรุปกำไรรายวันเดือน ${thaiMonths[selectedMonth-1]} ปี ${parseInt(selectedYear)+543}` },
                         tooltip: {
-                            backgroundColor: 'rgba(31, 41, 55, 0.9)', // bg-gray-800 with opacity
-                            titleColor: '#f3f4f6', // text-gray-100
-                            bodyColor: '#d1d5db', // text-gray-300
-                            footerColor: '#ffffff', // text-white
-                            footerFont: {
-                                weight: 'bold'
-                            },
+                            backgroundColor: 'rgba(31, 41, 55, 0.9)',
+                            titleColor: '#f3f4f6',
+                            bodyColor: '#d1d5db',
+                            footerColor: '#ffffff',
+                            footerFont: { weight: 'bold' },
                             borderRadius: 8,
                             padding: 12,
                             boxPadding: 4,
@@ -942,10 +975,14 @@
                                     return `ต้นทุนรวม: ${cost.toLocaleString()} บาท`;
                                 },
                                 footer: function(context) {
-                                    // The context for footer is an array of all tooltip items
-                                    const index = context[0].dataIndex;
-                                    const profit = dailyProfit[index];
-                                    return `\nกำไร: ${profit.toLocaleString()} บาท`;
+                                    if (context.length > 0) {
+                                        const index = context[0].dataIndex;
+                                        const profit = dailyProfit[index];
+                                        if (typeof profit === 'number') {
+                                            return `\nกำไร: ${profit.toLocaleString()} บาท`;
+                                        }
+                                    }
+                                    return '';
                                 }
                             }
                         }
@@ -953,14 +990,10 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                             grid: {
-                                color: '#e5e7eb'
-                            }
+                             grid: { color: '#e5e7eb' }
                         },
                         x: {
-                             grid: {
-                                display: false
-                            }
+                             grid: { display: false }
                         }
                     }
                 },
@@ -969,19 +1002,167 @@
                     afterDatasetsDraw: (chart) => {
                         const { ctx } = chart;
                         ctx.save();
-                        
                         ctx.font = '11px Sarabun';
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'bottom';
-
                         const profitDatasetMeta = chart.getDatasetMeta(0);
-
                         profitDatasetMeta.data.forEach((bar, index) => {
                             const data = chart.data.datasets[0].data[index];
                             if (data !== null && data !== 0) {
                                 const value = data.toLocaleString();
                                 const yPos = bar.y + (data >= 0 ? -5 : 18); 
-                                
+                                ctx.fillStyle = data >= 0 ? 'rgba(0, 0, 0, 0.8)' : 'rgba(200, 0, 0, 1)';
+                                ctx.fillText(value, bar.x, yPos);
+                            }
+                        });
+                        ctx.restore();
+                    }
+                }]
+            });
+        }
+
+        function renderMonthlyTrendChart() {
+            const chartCanvas = document.getElementById('main-chart');
+            const chartPlaceholder = document.getElementById('chart-placeholder');
+            const chartSummaryContainer = document.getElementById('chart-summary-container');
+            const selectedYear = chartYearSelect.value;
+            
+            chartSummaryContainer.innerHTML = '';
+
+            if (!selectedYear) {
+                chartCanvas.classList.add('hidden');
+                chartPlaceholder.classList.remove('hidden');
+                chartPlaceholder.textContent = 'กรุณาเลือกปีเพื่อแสดงกราฟ';
+                if (mainChartInstance) {
+                    mainChartInstance.destroy();
+                    mainChartInstance = null;
+                }
+                return;
+            }
+
+            const jobsForChart = allJobs.filter(job => new Date(job.date).getFullYear() == selectedYear);
+            
+            chartCanvas.classList.remove('hidden');
+            chartPlaceholder.classList.add('hidden');
+
+            const monthlyProfits = Array(12).fill(0);
+            const monthlyRevenues = Array(12).fill(0);
+            const monthlyCosts = Array(12).fill(0);
+
+            jobsForChart.forEach(job => {
+                const monthIndex = new Date(job.date).getMonth();
+                const revenue = (typeof job.revenue === 'number' && job.revenue > 0) ? job.revenue : 0;
+                const cost = (typeof job.cost === 'number') ? job.cost : 0;
+                monthlyRevenues[monthIndex] += revenue;
+                monthlyCosts[monthIndex] += cost;
+                monthlyProfits[monthIndex] += (revenue - cost);
+            });
+            
+            const totalYearlyProfit = monthlyProfits.reduce((a, b) => a + b, 0);
+            const monthsWithRevenue = monthlyProfits.filter(p => p !== 0).length;
+            const averageMonthlyProfit = monthsWithRevenue > 0 ? totalYearlyProfit / monthsWithRevenue : 0;
+            const maxProfit = Math.max(...monthlyProfits);
+            const bestMonthIndex = monthlyProfits.indexOf(maxProfit);
+            const bestMonth = thaiMonths[bestMonthIndex];
+
+            chartSummaryContainer.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                    <div class="p-3 rounded-lg bg-blue-100 text-blue-800 flex flex-col justify-center">
+                        <p class="text-sm font-medium">กำไรรวมทั้งปี</p>
+                        <p class="text-2xl font-bold">${totalYearlyProfit.toLocaleString('th-TH')} บาท</p>
+                    </div>
+                    <div class="p-3 rounded-lg bg-green-100 text-green-800 flex flex-col justify-center">
+                        <p class="text-sm font-medium">เฉลี่ยกำไร/เดือน</p>
+                        <p class="text-2xl font-bold">${averageMonthlyProfit.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท</p>
+                    </div>
+                    <div class="p-3 rounded-lg bg-purple-100 text-purple-800 flex flex-col justify-center">
+                        <p class="text-sm font-medium">เดือนที่กำไรสูงสุด</p>
+                        <p class="text-2xl font-bold">${bestMonth}</p>
+                        <p class="text-xs text-purple-600">(${maxProfit.toLocaleString('th-TH')} บาท)</p>
+                    </div>
+                </div>`;
+
+            if (mainChartInstance) {
+                mainChartInstance.destroy();
+            }
+
+            const ctx = chartCanvas.getContext('2d');
+            mainChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: thaiMonths,
+                    datasets: [{
+                        label: 'กำไรรายเดือน',
+                        data: monthlyProfits,
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                        hoverBackgroundColor: 'rgba(37, 99, 235, 1)',
+                        borderRadius: 6,
+                        borderWidth: 0,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: `สรุปกำไรรายเดือน ปี ${parseInt(selectedYear) + 543}` },
+                        tooltip: {
+                            backgroundColor: 'rgba(31, 41, 55, 0.9)',
+                            titleColor: '#f3f4f6',
+                            bodyColor: '#d1d5db',
+                            footerColor: '#ffffff',
+                            footerFont: { weight: 'bold' },
+                            borderRadius: 8,
+                            padding: 12,
+                            boxPadding: 4,
+                            callbacks: {
+                                title: function(context) {
+                                    const monthName = context[0].label;
+                                    const yearThai = parseInt(selectedYear) + 543;
+                                    return `${monthName} ${yearThai}`;
+                                },
+                                label: function(context) {
+                                    const index = context.dataIndex;
+                                    const revenue = monthlyRevenues[index];
+                                    return `รายรับทั้งหมด: ${revenue.toLocaleString()} บาท`;
+                                },
+                                afterLabel: function(context) {
+                                    const index = context.dataIndex;
+                                    const cost = monthlyCosts[index];
+                                    return `ต้นทุนรวม: ${cost.toLocaleString()} บาท`;
+                                },
+                                footer: function(context) {
+                                    if (context.length > 0) {
+                                        const index = context[0].dataIndex;
+                                        const profit = monthlyProfits[index];
+                                        if (typeof profit === 'number') {
+                                            return `\nกำไร: ${profit.toLocaleString()} บาท`;
+                                        }
+                                    }
+                                    return '';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#e5e7eb' } },
+                        x: { grid: { display: false } }
+                    }
+                },
+                plugins: [{
+                    id: 'monthlyDataLabels',
+                    afterDatasetsDraw: (chart) => {
+                        const { ctx } = chart;
+                        ctx.save();
+                        ctx.font = '11px Sarabun';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
+
+                        const datasetMeta = chart.getDatasetMeta(0);
+                        datasetMeta.data.forEach((bar, index) => {
+                            const data = chart.data.datasets[0].data[index];
+                            if (data !== null && data !== 0) {
+                                const value = data.toLocaleString();
+                                const yPos = bar.y + (data >= 0 ? -5 : 18); 
                                 ctx.fillStyle = data >= 0 ? 'rgba(0, 0, 0, 0.8)' : 'rgba(200, 0, 0, 1)';
                                 ctx.fillText(value, bar.x, yPos);
                             }
@@ -1201,20 +1382,13 @@
                 const newValue = sourceElement.value;
                 const isChartFilter = sourceElement === chartMonthSelect || sourceElement === chartYearSelect;
 
-                // Sync values across history and chart filters
-                if (sourceElement === historyMonthSelect) {
-                    chartMonthSelect.value = newValue;
-                } else if (sourceElement === chartMonthSelect) {
-                    historyMonthSelect.value = newValue;
-                } else if (sourceElement === historyYearSelect) {
-                    chartYearSelect.value = newValue;
-                } else if (sourceElement === chartYearSelect) {
-                    historyYearSelect.value = newValue;
-                }
+                if (sourceElement === historyMonthSelect) chartMonthSelect.value = newValue;
+                else if (sourceElement === chartMonthSelect) historyMonthSelect.value = newValue;
+                else if (sourceElement === historyYearSelect) chartYearSelect.value = newValue;
+                else if (sourceElement === chartYearSelect) historyYearSelect.value = newValue;
 
-                // Re-render both the job list and the chart
                 filterAndRenderJobs(!isChartFilter);
-                renderDailyTrendChart();
+                renderChart();
             };
 
             historyMonthSelect.addEventListener('change', handleFilterChange);
@@ -1230,7 +1404,7 @@
                 if (newGoal && !isNaN(newGoal)) {
                     localStorage.setItem('profitGoal', newGoal);
                     showToast(`ตั้งเป้าหมายกำไรใหม่เป็น ${Number(newGoal).toLocaleString()} บาท`, 'success');
-                    renderDailyTrendChart(); // Re-render chart with new goal
+                    renderChart();
                 } else {
                     showToast('กรุณากรอกเป้าหมายเป็นตัวเลข', 'error');
                 }
@@ -1238,21 +1412,17 @@
 
             checkAllJobs.addEventListener('change', (e) => {
                 const isChecked = e.target.checked;
-                
                 const visibleRows = document.querySelectorAll('#jobs-list tr[data-id]');
-
                 visibleRows.forEach(row => {
                     const jobId = row.dataset.id;
-                    
                     const job = allJobs.find(j => j.id === jobId);
                     if (job) {
                         job.isChecked = isChecked;
-                        
                         const cb = row.querySelector('.job-checkbox');
                         if (cb) cb.checked = isChecked;
-                        
                         const isRefund = job.revenue === 'claim' || job.revenue === 'refund' || (typeof job.revenue === 'number' && job.revenue < 0);
-                        if (!isRefund) {
+                        const isZeroRevenue = typeof job.revenue === 'number' && job.revenue === 0;
+                        if (!isRefund && !isZeroRevenue) {
                             row.classList.toggle('bg-green-50', isChecked);
                         }
                     }
@@ -1261,13 +1431,26 @@
                 updateSummary();
             });
 
-            logoutBtn.addEventListener('click', () => {
-                localStorage.removeItem('isLoggedIn');
-                mainAppContainer.classList.add('hidden');
-                loginContainer.classList.remove('hidden');
-                loginForm.reset();
-                showToast('ออกจากระบบสำเร็จ', 'success');
+            showDailyChartBtn.addEventListener('click', () => {
+                currentChartView = 'daily';
+                chartTitle.textContent = 'กำไรรายวัน';
+                showDailyChartBtn.classList.add('active');
+                showMonthlyChartBtn.classList.remove('active');
+                chartMonthFilter.style.display = 'block';
+                profitGoalContainer.style.display = 'block';
+                renderChart();
             });
+
+            showMonthlyChartBtn.addEventListener('click', () => {
+                currentChartView = 'monthly';
+                chartTitle.textContent = 'กำไรรายเดือน';
+                showMonthlyChartBtn.classList.add('active');
+                showDailyChartBtn.classList.remove('active');
+                chartMonthFilter.style.display = 'none';
+                profitGoalContainer.style.display = 'none';
+                renderChart();
+            });
+
         }
         
         document.addEventListener('DOMContentLoaded', () => {

@@ -203,6 +203,12 @@
                         </div>
                     </div>
                      <div class="flex-shrink-0 self-start sm:self-end flex items-center gap-4">
+                         <button id="refresh-chart-btn" title="รีเฟรชข้อมูล" class="p-2 bg-green-500 text-white rounded-full shadow-lg hover:bg-green-600 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M20 20v-5h-5" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 9a9 9 0 0114.13-5.13M20 15a9 9 0 01-14.13 5.13" />
+                            </svg>
+                        </button>
                         <button id="manage-holidays-btn" title="จัดการวันหยุด" class="p-2 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -442,6 +448,7 @@
         const holidaysGrid = document.getElementById('holidays-grid');
         const holidaysCalendarHeader = document.getElementById('holidays-calendar-header');
         const manageHolidaysBtn = document.getElementById('manage-holidays-btn');
+        const refreshChartBtn = document.getElementById('refresh-chart-btn');
 
 
         // --- UTILITY FUNCTIONS ---
@@ -1651,6 +1658,11 @@
             closeHolidaysModalBtn.addEventListener('click', () => {
                 holidaysModal.style.display = 'none';
             });
+            
+            refreshChartBtn.addEventListener('click', () => {
+                showToast('กำลังรีเฟรชข้อมูล...', 'info');
+                fetchAllData();
+            });
 
         }
         
@@ -1960,5 +1972,4 @@
     </script>
 </body>
 </html>
-
 

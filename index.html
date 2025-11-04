@@ -472,8 +472,19 @@
             script.id = callbackName;
             let params = `?action=${action}&callback=${callbackName}`;
             for (const key in data) {
-                if (data.hasOwnProperty(key)) {
-                    params += `&${key}=${encodeURIComponent(typeof data[key] === 'object' ? JSON.stringify(data[key]) : data[key])}`;
+                const value = data[key];
+                // ** FIX: ตรวจสอบให้แน่ใจว่าค่าไม่ใช่ undefined หรือ null ก่อนการ encode **
+                if (value !== undefined && value !== null) { 
+                    let encodedValue;
+                    if (typeof value === 'object') {
+                        // การ stringify วัตถุ/อาร์เรย์ อย่างปลอดภัย
+                        encodedValue = JSON.stringify(value); 
+                    } else {
+                        // ใช้ค่าพื้นฐานโดยตรง (เช่น string, number, boolean)
+                        encodedValue = value;
+                    }
+                    // Encode และเพิ่มลงใน URL
+                    params += `&${key}=${encodeURIComponent(encodedValue)}`;
                 }
             }
             script.src = `${api.url}${params}`;
@@ -592,13 +603,17 @@
             };
             callApi('get_repair_by_id', { id: id }, 'handleGetJob');
         }
+
+        // *** ฟังก์ชันนี้ถูกใช้เมื่อติ๊กทีละรายการ ***
         function updateCheckStatus(jobId, isChecked) {
             callApi('update_check_status', { data: { id: jobId, isChecked } }, 'handleGenericResponse');
         }
-        function updateAllCheckStatus(isChecked) {
-            const visibleJobIds = Array.from(jobsList.querySelectorAll('tr[data-id]')).map(tr => tr.dataset.id);
-            if (visibleJobIds.length > 0) {
-                callApi('update_all_check_status', { data: { ids: visibleJobIds, isChecked } }, 'handleGenericResponse');
+
+        // *** ฟังก์ชันนี้ใช้สำหรับการอัปเดตแบบกลุ่ม ***
+        function updateAllCheckStatus(jobIds, isChecked) {
+            if (jobIds.length > 0) {
+                // ส่ง ID เป็น array และสถานะ isChecked ไปพร้อมกัน
+                callApi('update_all_check_status', { ids: jobIds, isChecked: isChecked }, 'handleGenericResponse');
             }
         }
         
@@ -1611,13 +1626,17 @@
                 }
             });
 
+            // ** FIX: แก้ไขปุ่มติ๊กทั้งหมดให้ใช้ Batch Update แทนการ Dispatch Event **
             checkAllJobs.addEventListener('change', (e) => {
                 const isChecked = e.target.checked;
-                const visibleRows = document.querySelectorAll('#jobs-list tr[data-id]');
-                visibleRows.forEach(row => {
+                const visibleJobIds = [];
+
+                document.querySelectorAll('#jobs-list tr[data-id]').forEach(row => {
                     const jobId = row.dataset.id;
                     const job = allJobs.find(j => j.id === jobId);
+                    
                     if (job) {
+                        // 1. Update local state and UI immediately (โดยไม่เรียก handleJobCheckboxChange)
                         job.isChecked = isChecked;
                         const cb = row.querySelector('.job-checkbox');
                         if (cb) cb.checked = isChecked;
@@ -1626,10 +1645,16 @@
                         if (!isRefund && !isZeroRevenue) {
                             row.classList.toggle('bg-green-50', isChecked);
                         }
+                        visibleJobIds.push(jobId);
                     }
                 });
-                updateAllCheckStatus(isChecked);
+
+                // 2. ส่งคำขอ API แบบกลุ่มเดียว
+                updateAllCheckStatus(visibleJobIds, isChecked);
+
+                // 3. อัปเดตสรุปและสถานะ checkbox หลัก
                 updateSummary();
+                updateCheckAllState();
             });
 
             showDailyChartBtn.addEventListener('click', () => {
@@ -1849,7 +1874,8 @@
             const noteItem = e.target.closest('.note-summary-item');
             if (noteItem) {
                 const note = noteItem.dataset.note;
-                showNoteJobsModal(note);
+                const monthKey = noteItem.dataset.monthkey;
+                showNoteJobsModal(note, monthKey);
             }
         }
 
@@ -1902,7 +1928,7 @@
             noteJobsModal.style.display = 'flex';
         }
 
-        function showNoteJobsModal(note) {
+        function showNoteJobsModal(note, monthKey) {
             const selectedMonth = historyMonthSelect.value;
             const selectedYear = historyYearSelect.value;
 
@@ -1968,8 +1994,6 @@
             }
             noteJobsModal.style.display = 'flex';
         }
-
     </script>
 </body>
 </html>
-

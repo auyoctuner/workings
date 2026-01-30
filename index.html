@@ -580,7 +580,7 @@
             const m = chartMonthSelect.value, y = chartYearSelect.value;
             const dateStr = `${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
             const jobs = allJobs.filter(j => j.date === dateStr);
-            noteJobsModalTitle.textContent = `รายการวันที่ ${day} ${thaiMonths[month-1]} ${parseInt(year)+543}`;
+            noteJobsModalTitle.textContent = `รายการวันที่ ${day} ${thaiMonths[parseInt(m)-1]} ${parseInt(y)+543}`;
             renderModalList(jobs);
             noteJobsModal.style.display = 'flex';
         }
@@ -867,7 +867,7 @@
                         saveHoliday(y, m, holidaysForCurrentMonth);
                         renderChart(); manageHolidaysBtn.click();
                     };
-                    grid.appendChild(btn);
+                    holidaysGrid.appendChild(btn);
                 }
                 holidaysModal.style.display = 'flex';
             };
@@ -881,7 +881,7 @@
                 saveSparePart({ id: sparePartIdInput.value || null, partName: sparePartNameInput.value.trim(), price: parseFloat(sparePartPriceInput.value) || 0 });
             };
 
-            document.querySelectorAll('[id^="close-"], #confirm-cancel').forEach(btn => btn.onclick = () => {
+            document.querySelectorAll('[id^="close-"], #confirm-cancel, #close-note-jobs-modal-btn').forEach(btn => btn.onclick = () => {
                 btn.closest('.fixed').style.display = 'none';
             });
             

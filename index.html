@@ -34,21 +34,12 @@
             background-color: #3b82f6; /* bg-blue-600 */
             color: white;
         }
-        /* ปรับแต่ง scrollbar สำหรับ Modal */
-        #note-jobs-modal-list::-webkit-scrollbar {
-            width: 6px;
-        }
-        #note-jobs-modal-list::-webkit-scrollbar-thumb {
-            background-color: #d1d5db;
-            border-radius: 10px;
-        }
     </style>
 </head>
 <body class="bg-gray-100">
     
-    <!-- Login Section -->
     <div id="login-container" class="min-h-screen flex items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-xl shadow-lg w-full max-sm:w-full">
+        <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm">
             <h2 class="text-3xl font-bold mb-6 text-center text-gray-800">เข้าสู่ระบบ</h2>
             <form id="login-form">
                 <div class="mb-6">
@@ -63,9 +54,8 @@
         </div>
     </div>
 
-    <!-- Main Application Section -->
-    <div id="main-app" class="hidden min-h-screen p-4 sm:p-8">
-        <div class="max-w-5xl mx-auto bg-white p-6 sm:p-10 rounded-xl shadow-lg">
+    <div id="main-app" class="hidden min-h-screen p-4 sm:p-8 flex items-center justify-center">
+        <div class="bg-white p-6 sm:p-10 rounded-xl shadow-lg w-full max-w-5xl">
             <div class="flex justify-center items-center mb-4">
                 <h1 class="text-3xl sm:text-4xl font-bold text-gray-800">ระบบจัดการงานซ่อม</h1>
             </div>
@@ -76,11 +66,13 @@
                 <div class="flex-1">
                     <label for="history-month" class="block text-sm font-medium text-gray-700">เดือน</label>
                     <select id="history-month" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                        <!-- Options populated by JS -->
                     </select>
                 </div>
                 <div class="flex-1">
                     <label for="history-year" class="block text-sm font-medium text-gray-700">ปี</label>
                     <select id="history-year" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                        <!-- Options populated by JS -->
                     </select>
                 </div>
             </div>
@@ -96,80 +88,100 @@
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">รายการที่</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">รายการ</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">หมายเหตุ</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">รายรับ</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">ต้นทุน</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
-                                <div class="flex items-center justify-center space-x-2">
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">รายรับ</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ต้นทุน</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <div class="flex items-center space-x-2">
                                     <input type="checkbox" id="check-all-jobs" class="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out">
                                 </div>
                             </th>
                         </tr>
                     </thead>
                     <tbody id="jobs-list" class="bg-white divide-y divide-gray-200">
+                        <!-- รายการจะถูกสร้างขึ้นด้วย JavaScript -->
                     </tbody>
                 </table>
             </div>
             
-            <!-- ฟอร์มสำหรับเพิ่ม/แก้ไขงานซ่อม -->
+            <!-- ฟอร์มสำหรับเพิ่ม/แก้ไขงานซ่อม (รูปแบบใหม่) -->
             <h2 class="text-2xl font-semibold mb-4 text-gray-700">เพิ่ม/แก้ไขงานซ่อม</h2>
             <form id="repair-form" class="bg-gray-50 p-4 rounded-lg shadow-inner flex flex-wrap items-end gap-2 sm:gap-4">
                 <input type="hidden" id="repair-id" name="repairId">
+                
                 <div class="flex-grow min-w-[120px]">
                     <label for="repair-date-day" class="block text-xs text-gray-500">วันที่</label>
                     <div class="flex space-x-2 mt-1">
-                        <select id="repair-date-day" class="block w-1/3 px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm"></select>
-                        <select id="repair-date-month" class="block w-1/3 px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm"></select>
-                        <select id="repair-date-year" class="block w-1/3 px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm"></select>
+                        <select id="repair-date-day" class="block w-1/3 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"></select>
+                        <select id="repair-date-month" class="block w-1/3 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"></select>
+                        <select id="repair-date-year" class="block w-1/3 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"></select>
                     </div>
                 </div>
+                
                 <div class="flex-grow min-w-[120px]">
                     <label for="customer-name" class="block text-xs text-gray-500">รายการ</label>
-                    <input type="text" id="customer-name" required class="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm">
+                    <input type="text" id="customer-name" required class="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
                 </div>
+
                 <div class="flex-grow min-w-[120px]">
                     <label for="device-select" class="block text-xs text-gray-500">หมายเหตุ</label>
                     <div class="flex items-center space-x-2">
-                        <select id="device-select" required class="flex-grow mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm"></select>
+                        <select id="device-select" required class="flex-grow mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <!-- Options will be populated by JavaScript -->
+                        </select>
                         <button type="button" id="manage-notes-btn" class="mt-1 px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded-md hover:bg-gray-300 transition-colors">จัดการ</button>
                     </div>
                 </div>
+                
                 <div class="flex-grow min-w-[120px]">
-                    <label for="revenue-select" class="block text-xs text-gray-500">รายรับ</label>
+                    <label for="revenue" class="block text-xs text-gray-500">รายรับ</label>
                     <div class="flex items-center space-x-2 mt-1">
-                        <select id="revenue-select" class="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm">
+                        <select id="revenue-select" class="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
                             <option value="number">กรอกตัวเลข</option>
                             <option value="pending" selected>รอดำเนินการ</option>
                             <option value="claim">งานเคลม</option>
                             <option value="refund">คืนเงิน</option>
                         </select>
-                        <input type="number" id="revenue" style="display: none;" class="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm">
+                        <input type="number" id="revenue" style="display: none;" class="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
                     </div>
                 </div>
+
                 <div class="flex-grow min-w-[100px]">
-                    <label for="cost-select" class="block text-xs text-gray-500">ต้นทุน</label>
+                    <label for="cost" class="block text-xs text-gray-500">ต้นทุน</label>
                     <div class="flex items-center space-x-2 mt-1">
-                         <select id="cost-select" class="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm">
+                         <select id="cost-select" class="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
                             <option value="number">กรอกตัวเลข</option>
                             <option value="pending" selected>รอดำเนินการ</option>
                             <option value="no_cost">-</option>
                         </select>
-                        <input type="number" id="cost" style="display: none;" class="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm">
+                        <input type="number" id="cost" style="display: none;" class="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
                     </div>
                 </div>
+
                 <div class="flex-grow-0 mt-4 sm:mt-0 flex space-x-2">
-                    <button type="submit" id="submit-button" class="flex-grow sm:flex-grow-0 py-2 px-4 rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">บันทึก</button>
-                    <button type="button" id="cancel-button" class="flex-grow sm:flex-grow-0 py-2 px-4 rounded-md text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 hidden">ยกเลิก</button>
+                    <button type="submit" id="submit-button" class="flex-grow sm:flex-grow-0 flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition ease-in-out duration-150">
+                        บันทึก
+                    </button>
+                    <button type="button" id="cancel-button" class="flex-grow sm:flex-grow-0 flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150" style="display: none;">
+                        ยกเลิก
+                    </button>
                 </div>
             </form>
             
+            <!-- สรุปจำนวนงานซ่อม -->
             <hr class="my-8 border-t-2 border-gray-200">
             <h2 class="text-xl font-semibold mb-4 text-gray-700">สรุปจำนวนงานซ่อม</h2>
-            <div id="job-count-summary" class="space-y-4"></div>
+            <div id="job-count-summary" class="space-y-4">
+                <!-- Summary cards will be generated here -->
+            </div>
 
+            <!-- สรุปรายการงานซ่อม -->
             <hr class="my-8 border-t-2 border-gray-200">
             <h2 class="text-xl font-semibold mb-4 text-gray-700">สรุปรายรับ-ต้นทุน</h2>
-            <div id="summary-container" class="space-y-6"></div>
+            <div id="summary-container" class="space-y-6">
+                <!-- Summary will be generated here -->
+            </div>
             
+            <!-- กราฟแนวโน้มรายวัน -->
             <hr class="my-8 border-t-2 border-gray-200">
             <div id="chart-section">
                 <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
@@ -178,21 +190,26 @@
                         <div class="flex flex-col sm:flex-row gap-4 mt-2">
                             <div id="chart-month-filter" class="flex-1">
                                 <label for="chart-month-select" class="block text-sm font-medium text-gray-700">เลือกเดือน</label>
-                                <select id="chart-month-select" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm"></select>
+                                <select id="chart-month-select" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                    <!-- Options populated by JS -->
+                                </select>
                             </div>
                             <div class="flex-1">
                                 <label for="chart-year-select" class="block text-sm font-medium text-gray-700">เลือกปี</label>
-                                <select id="chart-year-select" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm"></select>
+                                <select id="chart-year-select" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                    <!-- Options populated by JS -->
+                                </select>
                             </div>
                         </div>
                     </div>
                      <div class="flex-shrink-0 self-start sm:self-end flex items-center gap-4">
-                         <button id="refresh-chart-btn" title="รีเฟรชข้อมูล" class="p-2 bg-green-500 text-white rounded-full shadow-lg">
+                         <button id="refresh-chart-btn" title="รีเฟรชข้อมูล" class="p-2 bg-green-500 text-white rounded-full shadow-lg hover:bg-green-600 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M20 20v-5h-5M4 9a9 9 0 0114.13-5.13M20 15a9 9 0 01-14.13 5.13" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M20 20v-5h-5" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 9a9 9 0 0114.13-5.13M20 15a9 9 0 01-14.13 5.13" />
                             </svg>
                         </button>
-                        <button id="manage-holidays-btn" title="จัดการวันหยุด" class="p-2 bg-blue-500 text-white rounded-full shadow-lg">
+                        <button id="manage-holidays-btn" title="จัดการวันหยุด" class="p-2 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
@@ -208,8 +225,8 @@
                     <div id="profit-goal-container" class="absolute top-2 right-2 z-10">
                         <label for="profit-goal-input" class="block text-xs font-medium text-gray-600 mb-1 text-right">เป้าหมายกำไร/วัน</label>
                         <div class="flex items-center space-x-1">
-                            <input type="number" id="profit-goal-input" class="block w-24 px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm">
-                            <button type="button" id="profit-goal-set-btn" class="px-3 py-1 bg-blue-500 text-white rounded-md text-xs font-medium">ตั้งค่า</button>
+                            <input type="number" id="profit-goal-input" class="block w-24 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <button type="button" id="profit-goal-set-btn" class="px-3 py-1 bg-blue-500 text-white rounded-md text-xs font-medium hover:bg-blue-600 whitespace-nowrap">ตั้งค่า</button>
                         </div>
                     </div>
                     <canvas id="main-chart"></canvas>
@@ -217,737 +234,1766 @@
                 </div>
                 <div id="chart-summary-container" class="mt-4"></div>
             </div>
+
         </div>
 
-        <!-- Modals and Toasts -->
+        <!-- Confirmation Modal -->
         <div id="confirm-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center p-4 z-50">
             <div class="bg-white rounded-lg p-6 shadow-xl w-full max-w-sm">
                 <h3 class="text-lg font-bold text-gray-900 mb-4" id="confirm-title">ยืนยันการลบ</h3>
-                <p class="text-sm text-gray-600 mb-6" id="confirm-message">คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?</p>
+                <p class="text-sm text-gray-600 mb-6" id="confirm-message">คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? การกระทำนี้ไม่สามารถยกเลิกได้</p>
                 <div class="flex justify-end space-x-2">
-                    <button id="confirm-cancel" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md">ยกเลิก</button>
-                    <button id="confirm-delete" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md">ลบ</button>
+                    <button id="confirm-cancel" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">ยกเลิก</button>
+                    <button id="confirm-delete" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">ลบ</button>
                 </div>
             </div>
         </div>
 
+        <!-- Manage Notes Modal -->
         <div id="manage-notes-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center p-4 z-50">
             <div class="bg-white rounded-lg p-6 shadow-xl w-full max-w-lg">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-bold text-gray-900">จัดการหมายเหตุ</h3>
-                    <button id="close-manage-notes-modal" class="text-gray-400 text-2xl">&times;</button>
+                    <button id="close-manage-notes-modal" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
                 </div>
+                
                 <div class="mb-4">
                     <h4 class="text-sm font-medium text-gray-700 mb-2">เพิ่มหมายเหตุใหม่</h4>
                     <div class="flex items-center space-x-2">
-                        <input type="text" id="new-note-input-modal" class="block w-full px-2 py-1 border border-gray-300 rounded-md text-sm" placeholder="พิมพ์หมายเหตุใหม่">
-                        <button type="button" id="save-note-button" class="bg-green-500 text-white px-3 py-1 rounded-md text-sm">บันทึก</button>
+                        <input type="text" id="new-note-input-modal" class="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm text-sm" placeholder="พิมพ์หมายเหตุใหม่">
+                        <button type="button" id="save-note-button" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-sm font-medium transition-colors">บันทึก</button>
                     </div>
                 </div>
-                <ul id="notes-list-container" class="space-y-2 max-h-48 overflow-y-auto"></ul>
+
+                <div class="mb-4">
+                    <h4 class="text-sm font-medium text-gray-700 mb-2">รายการหมายเหตุที่มีอยู่</h4>
+                    <ul id="notes-list-container" class="space-y-2 max-h-48 overflow-y-auto pr-2">
+                        <!-- Notes will be populated here -->
+                    </ul>
+                </div>
+                
             </div>
         </div>
         
+        <!-- Holiday Management Modal -->
         <div id="holidays-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center p-4 z-50">
             <div class="bg-white rounded-lg p-6 shadow-xl w-full max-w-md">
                 <div class="flex justify-between items-center mb-4">
                     <h3 id="holidays-modal-title" class="text-lg font-bold text-gray-900">จัดการวันหยุด</h3>
-                    <button id="close-holidays-modal" class="text-gray-400 text-2xl">&times;</button>
+                    <button id="close-holidays-modal" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
                 </div>
-                <div id="holidays-calendar-header" class="grid grid-cols-7 gap-2 text-center text-xs font-bold text-gray-500 mb-2"></div>
-                <div id="holidays-grid" class="grid grid-cols-7 gap-2 text-center"></div>
+                <div id="holidays-calendar-header" class="grid grid-cols-7 gap-2 text-center text-xs font-bold text-gray-500 mb-2">
+                    <!-- Day of week headers will be populated here -->
+                </div>
+                <div id="holidays-grid" class="grid grid-cols-7 gap-2 text-center">
+                    <!-- Day buttons will be populated here -->
+                </div>
             </div>
         </div>
 
-        <!-- Pop-up แสดงรายละเอียดงานซ่อมรายกลุ่ม -->
+        <!-- Note Jobs Modal -->
         <div id="note-jobs-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-lg p-6 shadow-xl w-full max-w-2xl flex flex-col max-h-[90vh]">
-                <div class="flex justify-between items-center p-4 border-b">
+            <div class="bg-white rounded-lg p-6 shadow-xl w-full max-w-2xl">
+                <div class="flex justify-between items-center mb-4">
                     <h3 id="note-jobs-modal-title" class="text-lg font-bold text-gray-900"></h3>
-                    <button id="close-note-jobs-modal" class="text-gray-400 text-2xl leading-none">&times;</button>
+                    <button id="close-note-jobs-modal" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
                 </div>
-                <div id="note-jobs-modal-list" class="flex-grow p-4 space-y-3 overflow-y-auto bg-gray-50">
-                </div>
-                <div class="p-4 border-t flex justify-end">
-                    <button id="close-note-jobs-modal-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">ปิด</button>
+                <div id="note-jobs-modal-list" class="space-y-2 max-h-96 overflow-y-auto pr-2">
+                    <!-- Job list will be populated here -->
                 </div>
             </div>
         </div>
 
+        <!-- Search and Parts Modal -->
         <div id="spare-parts-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-start justify-end p-4 z-40">
-            <div class="bg-white rounded-lg p-6 shadow-xl w-full max-w-md max-h-[85vh] flex flex-col">
-                <div class="flex justify-between items-center mb-4">
+            <div class="bg-white/95 backdrop-blur-sm rounded-lg p-6 shadow-xl w-full max-w-md max-h-[85vh] flex flex-col">
+                <div class="flex justify-between items-center mb-4 flex-shrink-0">
                     <h3 class="text-xl font-bold text-gray-900">ค้นหาและจัดการ</h3>
-                    <button id="close-spare-parts-modal" class="text-gray-400 text-2xl">&times;</button>
+                    <button id="close-spare-parts-modal" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
                 </div>
+                
                 <div class="flex-grow overflow-y-auto pr-2">
+                    <!-- Job Search -->
                     <div class="mb-4">
-                        <label for="spare-part-search" class="block text-sm font-medium text-gray-700">ค้นหาอะไหล่</label>
-                        <input type="search" id="spare-part-search" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="พิมพ์ชื่ออะไหล่...">
+                        <label for="search-input" class="block text-sm font-medium text-gray-700">ค้นหางานซ่อม</label>
+                        <input type="search" id="search-input" placeholder="พิมพ์ชื่องานซ่อม..." class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                     </div>
-                    <div id="add-part-form-container" class="hidden bg-gray-100 p-4 rounded-lg mb-4">
-                        <form id="spare-part-form" class="flex flex-wrap items-end gap-2">
+                    <ul id="job-search-list-container" class="space-y-2 mb-4"></ul>
+
+                    <hr class="my-4">
+
+                    <!-- Spare Part Search -->
+                    <div class="mb-4">
+                        <label for="spare-part-search" class="block text-sm font-medium text-gray-700">ค้นหาชื่ออะไหล่</label>
+                        <input type="search" id="spare-part-search" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="พิมพ์ชื่ออะไหล่...">
+                    </div>
+                     <div id="add-part-form-container" class="hidden">
+                        <form id="spare-part-form" class="bg-gray-100 p-4 rounded-lg mb-4 flex flex-wrap items-end gap-4">
                             <input type="hidden" id="spare-part-id">
                             <div class="flex-grow">
-                                <label class="text-xs text-gray-500">ชื่ออะไหล่</label>
-                                <input type="text" id="spare-part-name" required class="block w-full px-2 py-1 border border-gray-300 rounded-md text-sm">
+                                <label for="spare-part-name" class="block text-sm font-medium text-gray-700">ชื่ออะไหล่</label>
+                                <input type="text" id="spare-part-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                             </div>
-                            <div class="w-20">
-                                <label class="text-xs text-gray-500">ราคา</label>
-                                <input type="number" id="spare-part-price" required class="block w-full px-2 py-1 border border-gray-300 rounded-md text-sm">
+                            <div class="flex-grow">
+                                <label for="spare-part-price" class="block text-sm font-medium text-gray-700">ราคา</label>
+                                <input type="number" id="spare-part-price" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                             </div>
-                            <button type="submit" id="spare-part-submit-btn" class="bg-blue-600 text-white px-3 py-1 rounded-md text-sm">เพิ่ม</button>
-                            <button type="button" id="spare-part-cancel-btn" class="bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-sm hidden">ยกเลิก</button>
+                            <div class="flex space-x-2">
+                                <button type="submit" id="spare-part-submit-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">เพิ่มอะไหล่</button>
+                                <button type="button" id="spare-part-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 hidden">ยกเลิก</button>
+                            </div>
                         </form>
                     </div>
-                    <button id="toggle-add-part-btn" class="w-full mb-4 px-3 py-2 bg-gray-200 rounded-md text-sm">เพิ่มอะไหล่ใหม่</button>
+                    <div class="mb-4">
+                        <button id="toggle-add-part-btn" title="เพิ่ม/แก้ไขอะไหล่" class="w-full px-3 py-2 bg-gray-200 text-gray-700 text-sm rounded-md hover:bg-gray-300 transition-colors">
+                            เพิ่มรายการอะไหล่
+                        </button>
+                    </div>
                     <ul id="spare-parts-list-container" class="space-y-2"></ul>
                 </div>
             </div>
         </div>
 
-        <div class="fixed bottom-6 right-6">
-            <button id="sticky-parts-btn" class="bg-blue-600 text-white p-4 rounded-full shadow-lg">
+
+        <!-- Floating Buttons Container -->
+        <div id="floating-btn-container" class="fixed bottom-6 right-6 flex flex-col items-center space-y-4" style="z-index: 100;">
+            <button id="sticky-parts-btn" title="ค้นหาและจัดการ" class="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition ease-in-out duration-150">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
             </button>
         </div>
+
     </div>
     
     <div class="toast-container" id="toast-container"></div>
     
     <script>
-        // --- GLOBAL VARIABLES & CONFIG ---
+        // --- GLOBAL VARIABLES ---
         const api = {
-            url: "https://script.google.com/macros/s/AKfycbwyfuHzrvujcmngljwVwmMgRpEH8Xs8f7Izga5Tueji9ue0QvhO2JJLQ1DDWf_5HMeaQg/exec"
+            url: "https://script.google.com/macros/s/AKfycbwyfuHzrvujcmngljwVwmMgRpEH8Xs8f7Izga5Tueji9ue0QvhO2JJLQ1DDWf_5HMeaQg/exec",
+            sheetId: "1YlVr84ymT8iIKM03GYufNLFfNp37XSMbZMpPjdukWSs"
         };
         const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-        let allJobs = [], allSpareParts = [], holidaysForCurrentMonth = [];
-        let mainChartInstance = null, currentChartView = 'daily', deleteCallback = null;
+        let allJobs = [];
+        let allSpareParts = [];
+        let deleteCallback = null; // To handle different delete types
+        let mainChartInstance = null; // To hold the chart instance
+        let currentChartView = 'daily';
+        let holidaysForCurrentMonth = [];
 
-        // --- DOM ELEMENTS ---
-        const loginContainer = document.getElementById('login-container'), mainAppContainer = document.getElementById('main-app');
-        const loginForm = document.getElementById('login-form'), loginError = document.getElementById('login-error');
-        const historyMonthSelect = document.getElementById('history-month'), historyYearSelect = document.getElementById('history-year');
-        const jobsList = document.getElementById('jobs-list'), summaryContainer = document.getElementById('summary-container');
-        const checkAllJobs = document.getElementById('check-all-jobs'), repairForm = document.getElementById('repair-form');
-        const customerNameInput = document.getElementById('customer-name'), deviceSelect = document.getElementById('device-select');
-        const revenueSelect = document.getElementById('revenue-select'), revenueInput = document.getElementById('revenue');
-        const costSelect = document.getElementById('cost-select'), costInput = document.getElementById('cost');
-        const dateDaySelect = document.getElementById('repair-date-day'), dateMonthSelect = document.getElementById('repair-date-month'), dateYearSelect = document.getElementById('repair-date-year');
-        const submitButton = document.getElementById('submit-button'), cancelButton = document.getElementById('cancel-button');
-        const confirmModal = document.getElementById('confirm-modal'), manageNotesModal = document.getElementById('manage-notes-modal');
-        const holidaysModal = document.getElementById('holidays-modal'), noteJobsModal = document.getElementById('note-jobs-modal');
-        const sparePartsModal = document.getElementById('spare-parts-modal'), sparePartSearch = document.getElementById('spare-part-search');
-        const chartMonthSelect = document.getElementById('chart-month-select'), chartYearSelect = document.getElementById('chart-year-select');
-        const profitGoalInput = document.getElementById('profit-goal-input'), showDailyChartBtn = document.getElementById('show-daily-chart-btn');
-        const showMonthlyChartBtn = document.getElementById('show-monthly-chart-btn'), sparePartsListContainer = document.getElementById('spare-parts-list-container');
-        const toggleAddPartBtn = document.getElementById('toggle-add-part-btn'), addPartFormContainer = document.getElementById('add-part-form-container');
-        const sparePartForm = document.getElementById('spare-part-form'), sparePartIdInput = document.getElementById('spare-part-id');
-        const sparePartNameInput = document.getElementById('spare-part-name'), sparePartPriceInput = document.getElementById('spare-part-price');
-        const sparePartSubmitBtn = document.getElementById('spare-part-submit-btn'), sparePartCancelBtn = document.getElementById('spare-part-cancel-btn');
-        
-        const profitGoalSetBtn = document.getElementById('profit-goal-set-btn');
-        const manageHolidaysBtn = document.getElementById('manage-holidays-btn');
-        const refreshChartBtn = document.getElementById('refresh-chart-btn');
-        const stickyPartsBtn = document.getElementById('sticky-parts-btn');
+        // --- UI ELEMENTS ---
+        const loginContainer = document.getElementById('login-container');
+        const mainAppContainer = document.getElementById('main-app');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        const historyMonthSelect = document.getElementById('history-month');
+        const historyYearSelect = document.getElementById('history-year');
+        const jobsList = document.getElementById('jobs-list');
+        const summaryContainer = document.getElementById('summary-container');
+        const jobCountSummary = document.getElementById('job-count-summary');
+        const checkAllJobs = document.getElementById('check-all-jobs');
+        const repairForm = document.getElementById('repair-form');
+        const customerNameInput = document.getElementById('customer-name');
+        const deviceSelect = document.getElementById('device-select');
+        const revenueSelect = document.getElementById('revenue-select');
+        const revenueInput = document.getElementById('revenue');
+        const costSelect = document.getElementById('cost-select');
+        const costInput = document.getElementById('cost');
+        const dateDaySelect = document.getElementById('repair-date-day');
+        const dateMonthSelect = document.getElementById('repair-date-month');
+        const dateYearSelect = document.getElementById('repair-date-year');
+        const submitButton = document.getElementById('submit-button');
+        const cancelButton = document.getElementById('cancel-button');
+        const confirmModal = document.getElementById('confirm-modal');
+        const confirmDeleteBtn = document.getElementById('confirm-delete');
+        const confirmCancelBtn = document.getElementById('confirm-cancel');
+        const manageNotesModal = document.getElementById('manage-notes-modal');
         const manageNotesBtn = document.getElementById('manage-notes-btn');
         const closeManageNotesModalBtn = document.getElementById('close-manage-notes-modal');
         const newNoteInputModal = document.getElementById('new-note-input-modal');
         const saveNoteButton = document.getElementById('save-note-button');
-        const closeNoteJobsModalBtn = document.getElementById('close-note-jobs-modal');
-        const closeSparePartsModalBtn = document.getElementById('close-spare-parts-modal');
-        const confirmDeleteBtn = document.getElementById('confirm-delete');
-        const confirmCancelBtn = document.getElementById('confirm-cancel');
+        const notesListContainer = document.getElementById('notes-list-container');
+        const noteJobsModal = document.getElementById('note-jobs-modal');
         const noteJobsModalTitle = document.getElementById('note-jobs-modal-title');
         const noteJobsModalList = document.getElementById('note-jobs-modal-list');
+        const closeNoteJobsModalBtn = document.getElementById('close-note-jobs-modal');
+        const stickyPartsBtn = document.getElementById('sticky-parts-btn');
+        const sparePartsModal = document.getElementById('spare-parts-modal');
+        const closeSparePartsModalBtn = document.getElementById('close-spare-parts-modal');
+        const sparePartSearch = document.getElementById('spare-part-search');
+        const sparePartsListContainer = document.getElementById('spare-parts-list-container');
+        const toggleAddPartBtn = document.getElementById('toggle-add-part-btn');
+        const addPartFormContainer = document.getElementById('add-part-form-container');
+        const sparePartForm = document.getElementById('spare-part-form');
+        const sparePartIdInput = document.getElementById('spare-part-id');
+        const sparePartNameInput = document.getElementById('spare-part-name');
+        const sparePartPriceInput = document.getElementById('spare-part-price');
+        const sparePartSubmitBtn = document.getElementById('spare-part-submit-btn');
+        const sparePartCancelBtn = document.getElementById('spare-part-cancel-btn');
+        const chartMonthSelect = document.getElementById('chart-month-select');
+        const chartYearSelect = document.getElementById('chart-year-select');
+        const profitGoalInput = document.getElementById('profit-goal-input');
+        const profitGoalSetBtn = document.getElementById('profit-goal-set-btn');
+        const searchInput = document.getElementById('search-input');
+        const jobSearchListContainer = document.getElementById('job-search-list-container');
+        const showDailyChartBtn = document.getElementById('show-daily-chart-btn');
+        const showMonthlyChartBtn = document.getElementById('show-monthly-chart-btn');
+        const chartTitle = document.getElementById('chart-title');
+        const chartMonthFilter = document.getElementById('chart-month-filter');
+        const profitGoalContainer = document.getElementById('profit-goal-container');
+        const holidaysModal = document.getElementById('holidays-modal');
+        const closeHolidaysModalBtn = document.getElementById('close-holidays-modal');
         const holidaysModalTitle = document.getElementById('holidays-modal-title');
         const holidaysGrid = document.getElementById('holidays-grid');
         const holidaysCalendarHeader = document.getElementById('holidays-calendar-header');
-        const closeHolidaysModalBtn = document.getElementById('close-holidays-modal');
+        const manageHolidaysBtn = document.getElementById('manage-holidays-btn');
+        const refreshChartBtn = document.getElementById('refresh-chart-btn');
 
-        // --- UTILS ---
-        function showMoney(val, isCost = false) {
-            if (val === 'pending') return '<span class="text-yellow-500 font-medium">รอดำเนินการ</span>';
-            if (val === 'claim') return '<span class="text-red-600 font-medium">งานเคลม</span>';
-            if (val === 'refund') return '<span class="text-red-600 font-medium">คืนเงิน</span>';
-            if (val === 'no_cost') return '<span class="text-gray-400">-</span>';
-            const num = parseFloat(val) || 0;
-            return `<span class="${isCost ? 'text-red-600' : 'text-green-600'} font-medium">${num.toLocaleString()}</span>`;
-        }
 
+        // --- UTILITY FUNCTIONS ---
         function showToast(message, type = 'success') {
-            const container = document.getElementById('toast-container');
+            const toastContainer = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            toast.className = `toast p-4 mb-2 text-white rounded-lg shadow-md ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} transform translate-y-full opacity-0`;
+            let bgColor = 'bg-gray-800';
+            if (type === 'success') bgColor = 'bg-green-500';
+            else if (type === 'error') bgColor = 'bg-red-500';
+            toast.className = `toast p-4 mb-2 text-white rounded-lg shadow-md ${bgColor} transform translate-y-full opacity-0`;
             toast.textContent = message;
-            container.appendChild(toast);
+            toastContainer.appendChild(toast);
             setTimeout(() => { toast.style.transform = 'translateY(0)'; toast.style.opacity = '1'; }, 10);
             setTimeout(() => { toast.style.transform = 'translateY(1rem)'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
         function callApi(action, data = {}, callbackName) {
-            const old = document.getElementById(callbackName); if (old) old.remove();
-            const script = document.createElement('script'); script.id = callbackName;
+            const oldScript = document.getElementById(callbackName);
+            if (oldScript) oldScript.remove();
+            const script = document.createElement('script');
+            script.id = callbackName;
             let params = `?action=${action}&callback=${callbackName}`;
             for (const key in data) {
-                let val = data[key];
-                if (val !== undefined && val !== null) {
-                    params += `&${key}=${encodeURIComponent(typeof val === 'object' ? JSON.stringify(val) : val)}`;
+                const value = data[key];
+                // ** FIX: ตรวจสอบให้แน่ใจว่าค่าไม่ใช่ undefined หรือ null ก่อนการ encode **
+                if (value !== undefined && value !== null) { 
+                    let encodedValue;
+                    if (typeof value === 'object') {
+                        // การ stringify วัตถุ/อาร์เรย์ อย่างปลอดภัย
+                        encodedValue = JSON.stringify(value); 
+                    } else {
+                        // ใช้ค่าพื้นฐานโดยตรง (เช่น string, number, boolean)
+                        encodedValue = value;
+                    }
+                    // Encode และเพิ่มลงใน URL
+                    params += `&${key}=${encodeURIComponent(encodedValue)}`;
                 }
             }
             script.src = `${api.url}${params}`;
-            script.onerror = () => { showToast('Connection Error', 'error'); script.remove(); };
+            script.onerror = () => { showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error'); script.remove(); };
             document.body.appendChild(script);
         }
 
-        // --- API & DATA ---
-        function fetchAllData() { fetchJobs(); fetchNotes(); fetchSpareParts(); }
+        window.handleGenericResponse = (result) => {
+            if (result.status === 'error') {
+                console.error("API Error:", result.message);
+                showToast(`เกิดข้อผิดพลาด: ${result.message}`, 'error');
+            }
+            document.getElementById('handleGenericResponse')?.remove();
+        };
+
+        function toggleHoliday(year, month, day) {
+            const dayInt = parseInt(day);
+            const dayIndex = holidaysForCurrentMonth.indexOf(dayInt);
+
+            if (dayIndex > -1) {
+                holidaysForCurrentMonth.splice(dayIndex, 1);
+            } else {
+                holidaysForCurrentMonth.push(dayInt);
+            }
+            saveHolidaysToServer(year, month, holidaysForCurrentMonth);
+            renderChart(); 
+        }
+
+        // --- API & DATA FUNCTIONS ---
+        function fetchHolidays(year, month, callback) {
+            window.handleGetHolidays = res => {
+                if (res.status === 'success') {
+                    holidaysForCurrentMonth = res.data.map(d => parseInt(d)); // Ensure days are numbers
+                    if (callback) callback();
+                } else {
+                    showToast('ไม่สามารถโหลดข้อมูลวันหยุดได้', 'error');
+                }
+                document.getElementById('handleGetHolidays')?.remove();
+            };
+            callApi('get_holidays', { year: year, month: month }, 'handleGetHolidays');
+        }
+
+        function saveHolidaysToServer(year, month, holidays) {
+             window.handleSaveHolidays = res => {
+                if (res.status !== 'success') {
+                    showToast('เกิดข้อผิดพลาดในการบันทึกวันหยุด', 'error');
+                }
+                document.getElementById('handleSaveHolidays')?.remove();
+            };
+            const dataToSave = { year: year, month: month, holidays: holidays };
+            callApi('save_holidays', { data: dataToSave }, 'handleSaveHolidays');
+        }
+
+        function fetchAllData() {
+            fetchJobs();
+            fetchNotes();
+            fetchSpareParts();
+        }
+
         function fetchJobs() {
             window.handleRepairs = res => {
-                if (res.status === 'success') { allJobs = res.data; populateDropdowns(); filterAndRenderJobs(); updateHolidayAndChart(); }
+                if (res.status === 'success') { 
+                    allJobs = res.data; 
+                    populateHistoryDropdowns();
+                    populateChartFilterDropdowns();
+                    filterAndRenderJobs(); 
+                    renderChart();
+                } 
+                else { showToast(res.message, 'error'); }
                 document.getElementById('handleRepairs')?.remove();
             };
             callApi('get_repairs', {}, 'handleRepairs');
         }
+        function saveJob(jobData) {
+            window.handleSave = res => {
+                if (res.status === 'success') {
+                    allJobs.push({ ...jobData, id: res.id, createdAt: Date.now(), isChecked: false });
+                    filterAndRenderJobs();
+                    showToast('บันทึกรายการสำเร็จ', 'success');
+                    
+                    // Partial reset for continuous entry
+                    customerNameInput.value = '';
+                    revenueSelect.value = 'pending';
+                    revenueInput.style.display = 'none';
+                    revenueInput.value = '';
+                    costSelect.value = 'pending';
+                    costInput.style.display = 'none';
+                    costInput.value = '';
+                    customerNameInput.focus();
+                } else { showToast(res.message, 'error'); }
+                document.getElementById('handleSave')?.remove();
+            };
+            callApi('save_repair', { data: jobData }, 'handleSave');
+        }
+        function updateJob(jobId, jobData) {
+            const jobIndex = allJobs.findIndex(j => j.id === jobId);
+            if (jobIndex !== -1) {
+                const isDateChanged = jobData.date && jobData.date !== allJobs[jobIndex].date;
+                allJobs[jobIndex] = { ...allJobs[jobIndex], ...jobData };
+                if(isDateChanged) { fetchJobs(); } 
+                else { filterAndRenderJobs(); }
+                callApi('update_repair', { id: jobId, data: jobData }, 'handleGenericResponse');
+            }
+        }
+        function deleteJob(jobId) {
+            allJobs = allJobs.filter(j => j.id !== jobId);
+            filterAndRenderJobs();
+            callApi('delete_repair', { id: jobId }, 'handleGenericResponse');
+            showToast('ลบรายการสำเร็จ', 'success');
+        }
+        function getRepairById(id, callback) {
+            window.handleGetJob = res => {
+                if (res.status === 'success') callback(res.data);
+                else { showToast('ไม่พบข้อมูลงานซ่อม', 'error'); callback(null); }
+                document.getElementById('handleGetJob')?.remove();
+            };
+            callApi('get_repair_by_id', { id: id }, 'handleGetJob');
+        }
+
+        // *** ฟังก์ชันนี้ถูกใช้เมื่อติ๊กทีละรายการ ***
+        function updateCheckStatus(jobId, isChecked) {
+            callApi('update_check_status', { data: { id: jobId, isChecked } }, 'handleGenericResponse');
+        }
+
+        // *** ฟังก์ชันนี้ใช้สำหรับการอัปเดตแบบกลุ่ม ***
+        function updateAllCheckStatus(jobIds, isChecked) {
+            if (jobIds.length > 0) {
+                // ส่ง ID เป็น array และสถานะ isChecked ไปพร้อมกัน
+                callApi('update_all_check_status', { ids: jobIds, isChecked: isChecked }, 'handleGenericResponse');
+            }
+        }
+        
         function fetchNotes() {
             window.handleNotes = res => {
-                if (res.status === 'success') { renderNotesList(res.data); }
+                if (res.status === 'success') { renderNotesSelect(res.data); renderNotesManagementList(res.data); } 
+                else { showToast(res.message, 'error'); }
                 document.getElementById('handleNotes')?.remove();
             };
             callApi('get_notes', {}, 'handleNotes');
         }
+        function saveNote(newNote) {
+            window.handleSaveNote = res => {
+                if (res.status === 'success') { fetchNotes(); showToast('บันทึกหมายเหตุสำเร็จ', 'success'); }
+                else { showToast(res.message, 'error'); }
+                document.getElementById('handleSaveNote')?.remove();
+            };
+            callApi('save_note', { note: newNote }, 'handleSaveNote');
+        }
+        function deleteNote(note) {
+            window.handleDeleteNote = res => {
+                if (res.status === 'success') { fetchNotes(); showToast('ลบหมายเหตุสำเร็จ', 'success'); }
+                else { showToast(res.message, 'error'); }
+                document.getElementById('handleDeleteNote')?.remove();
+            };
+            callApi('delete_note', { note: note }, 'handleDeleteNote');
+        }
+        
         function fetchSpareParts() {
             window.handleGetParts = res => {
-                if (res.status === 'success') { allSpareParts = res.data; renderSpareParts(); }
+                if (res.status === 'success') { allSpareParts = res.data; renderSparePartsList(); }
+                else { showToast(res.message, 'error'); }
                 document.getElementById('handleGetParts')?.remove();
             };
             callApi('get_spare_parts', {}, 'handleGetParts');
         }
-        function fetchHolidays(y, m, cb) {
-            window.handleGetHolidays = res => {
-                if (res.status === 'success') { holidaysForCurrentMonth = res.data.map(d => parseInt(d)); if (cb) cb(); }
-                document.getElementById('handleGetHolidays')?.remove();
+        function saveSparePart(partData) {
+            window.handleSavePart = res => {
+                if (res.status === 'success') {
+                    const isUpdate = !!sparePartIdInput.value;
+                    const savedPart = res.data;
+                    const index = allSpareParts.findIndex(p => p.id === savedPart.id);
+                    if (index !== -1) allSpareParts[index] = savedPart;
+                    else allSpareParts.push(savedPart);
+                    renderSparePartsList();
+                    showToast('บันทึกข้อมูลอะไหล่สำเร็จ', 'success');
+
+                    if (isUpdate) {
+                        resetSparePartForm(true); // Hide form after update
+                    } else {
+                        sparePartForm.reset(); // Just clear the fields
+                        sparePartIdInput.value = ''; // Just in case
+                        sparePartNameInput.focus(); // Focus for next entry
+                    }
+                } else { 
+                    showToast(res.message, 'error'); 
+                }
+                document.getElementById('handleSavePart')?.remove();
             };
-            callApi('get_holidays', { year: y, month: m }, 'handleGetHolidays');
+            callApi('save_spare_part', { data: partData }, 'handleSavePart');
         }
-        function saveHoliday(y, m, days) {
-            callApi('save_holidays', { data: { year: y, month: m, holidays: days } }, 'handleGenericResponse');
+        function deleteSparePart(partId) {
+            allSpareParts = allSpareParts.filter(p => p.id !== partId);
+            renderSparePartsList();
+            callApi('delete_spare_part', { id: partId }, 'handleGenericResponse');
+            showToast('ลบอะไหล่สำเร็จ', 'success');
         }
-
-        // --- RENDER LOGIC ---
-        function populateDropdowns() {
+        
+        // --- UI & RENDER FUNCTIONS ---
+        function populateDateDropdowns() {
             const today = new Date();
-            const years = [...new Set(allJobs.map(j => new Date(j.date).getFullYear()))].sort((a,b) => b-a);
-            if (!years.includes(today.getFullYear())) years.push(today.getFullYear());
+            const currentDay = today.getDate(), currentMonth = today.getMonth() + 1, currentYear = today.getFullYear();
+            dateDaySelect.innerHTML = Array.from({length: 31}, (_, i) => `<option value="${String(i+1).padStart(2,'0')}" ${i+1 === currentDay ? 'selected' : ''}>${i+1}</option>`).join('');
+            dateMonthSelect.innerHTML = thaiMonths.map((m, i) => `<option value="${String(i+1).padStart(2,'0')}" ${i+1 === currentMonth ? 'selected' : ''}>${m}</option>`).join('');
+            const thaiYear = currentYear + 543;
+            dateYearSelect.innerHTML = Array.from({length: 11}, (_, i) => `<option value="${thaiYear - 5 + i - 543}" ${thaiYear - 5 + i === thaiYear ? 'selected' : ''}>${thaiYear - 5 + i}</option>`).join('');
+        }
+        function populateHistoryDropdowns() {
+            const today = new Date();
+            const currentMonth = today.getMonth() + 1;
+            const currentYear = today.getFullYear();
+            const years = [...new Set(allJobs.map(job => new Date(job.date).getFullYear()))].sort((a, b) => b - a);
 
-            const mOpts = '<option value="">ทั้งหมด</option>' + thaiMonths.map((m, i) => `<option value="${String(i+1).padStart(2,'0')}">${m}</option>`).join('');
-            const yOpts = '<option value="">ทั้งหมด</option>' + years.map(y => `<option value="${y}">${y + 543}</option>`).join('');
+            historyMonthSelect.innerHTML = '<option value="">ทั้งหมด</option>' + thaiMonths.map((m, i) => `<option value="${String(i+1).padStart(2,'0')}">${m}</option>`).join('');
+            historyYearSelect.innerHTML = '<option value="">ทั้งหมด</option>' + years.map(year => `<option value="${year}">${year + 543}</option>`).join('');
             
-            historyMonthSelect.innerHTML = mOpts; historyYearSelect.innerHTML = yOpts;
-            chartMonthSelect.innerHTML = mOpts; chartYearSelect.innerHTML = yOpts;
+            // Set initial selected values, matching the chart filters
+            historyMonthSelect.value = String(currentMonth).padStart(2, '0');
+             if (years.includes(currentYear)) {
+                historyYearSelect.value = currentYear;
+            }
+        }
+        
+        function populateChartFilterDropdowns() {
+            const years = [...new Set(allJobs.map(job => new Date(job.date).getFullYear()))].sort((a, b) => b - a);
+            const today = new Date();
+            const currentYear = today.getFullYear();
+
+            chartMonthSelect.innerHTML = '<option value="">-- เลือกเดือน --</option>' + thaiMonths.map((m, i) => `<option value="${String(i+1).padStart(2,'0')}">${m}</option>`).join('');
+            chartYearSelect.innerHTML = '<option value="">-- เลือกปี --</option>' + years.map(year => `<option value="${year}">${year + 543}</option>`).join('');
+
+            chartMonthSelect.value = String(today.getMonth() + 1).padStart(2, '0');
+            if (years.includes(currentYear)) {
+                chartYearSelect.value = currentYear;
+            }
+        }
+        
+        function filterAndRenderJobs(shouldMaintainScroll = true) {
+            const scrollY = window.scrollY;
+            const filteredJobs = getCurrentlyFilteredJobs();
+
+            const grouped = filteredJobs.reduce((acc, job) => { (acc[job.date] = acc[job.date] || []).push(job); return acc; }, {});
+            const sorted = Object.keys(grouped).sort().flatMap(date => grouped[date].sort((a,b) => a.createdAt - b.createdAt).map((job, i) => ({...job, item_no: i + 1})));
             
-            historyMonthSelect.value = String(today.getMonth()+1).padStart(2, '0');
-            historyYearSelect.value = today.getFullYear();
-            chartMonthSelect.value = historyMonthSelect.value;
-            chartYearSelect.value = historyYearSelect.value;
-            
-            // Date input dropdowns
-            dateDaySelect.innerHTML = Array.from({length: 31}, (_, i) => `<option value="${String(i+1).padStart(2,'0')}">${i+1}</option>`).join('');
-            dateMonthSelect.innerHTML = thaiMonths.map((m, i) => `<option value="${String(i+1).padStart(2,'0')}">${m}</option>`).join('');
-            dateYearSelect.innerHTML = Array.from({length: 5}, (_, i) => `<option value="${today.getFullYear()-2+i}">${today.getFullYear()-2+i+543}</option>`).join('');
-            dateDaySelect.value = String(today.getDate()).padStart(2, '0');
-            dateMonthSelect.value = String(today.getMonth()+1).padStart(2, '0');
-            dateYearSelect.value = today.getFullYear();
+            renderJobs(sorted);
+            updateSummary();
+            renderJobCounts(sorted);
+            if (shouldMaintainScroll) {
+                window.scrollTo({ top: scrollY, behavior: 'auto' });
+            }
         }
 
-        function filterAndRenderJobs() {
-            const m = historyMonthSelect.value, y = historyYearSelect.value;
-            let jobs = allJobs.filter(j => j && j.date);
-            if (y) jobs = jobs.filter(j => new Date(j.date).getFullYear() == y);
-            if (m) jobs = jobs.filter(j => (new Date(j.date).getMonth()+1) == m);
-            
-            const grouped = jobs.reduce((acc, job) => { (acc[job.date] = acc[job.date] || []).push(job); return acc; }, {});
-            const sorted = Object.keys(grouped).sort().flatMap(d => grouped[d].sort((a,b) => a.createdAt - b.createdAt).map((j, i) => ({...j, item_no: i + 1})));
-            
-            renderJobsTable(sorted);
-            updateSummary(jobs.filter(j => j.isChecked));
-        }
-
-        function renderJobsTable(jobs) {
-            jobsList.innerHTML = jobs.length ? '' : '<tr><td colspan="7" class="p-4 text-center">ไม่มีข้อมูล</td></tr>';
-            let lastDate = null;
-            jobs.forEach(j => {
-                const date = new Date(j.date);
-                if (lastDate && lastDate !== j.date) {
-                    jobsList.insertAdjacentHTML('beforeend', `<tr><td colspan="7"><hr class="my-2 border-blue-200"></td></tr>`);
+        function renderJobs(jobs) {
+            jobsList.innerHTML = '';
+            if (!jobs || jobs.length === 0) {
+                jobsList.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">ไม่มีรายการ</td></tr>`;
+                updateCheckAllState();
+                return;
+            }
+            let currentDay = null;
+            jobs.forEach(job => {
+                let dateObj = new Date(job.date);
+                const dateStr = dateObj.toISOString().split('T')[0];
+                if (dateStr !== currentDay && currentDay !== null) {
+                    jobsList.insertAdjacentHTML('beforeend', `<tr><td colspan="7"><hr class="my-4 border-t-2 border-blue-400"></td></tr>`);
                 }
                 const row = jobsList.insertRow();
-                row.dataset.id = j.id;
-                const isRefund = j.revenue === 'claim' || j.revenue === 'refund' || (typeof j.revenue === 'number' && j.revenue < 0);
-                row.className = isRefund ? 'bg-red-50' : (j.isChecked ? 'bg-green-50' : '');
+                row.dataset.id = job.id;
+                const isRefund = job.revenue === 'claim' || job.revenue === 'refund' || (typeof job.revenue === 'number' && job.revenue < 0);
+                const isZeroRevenue = typeof job.revenue === 'number' && job.revenue === 0;
+
+                let rowClass = '';
+                if (isZeroRevenue) {
+                    rowClass = 'bg-yellow-100';
+                } else if (isRefund) {
+                    rowClass = 'bg-red-100';
+                } else if (job.isChecked) {
+                    rowClass = 'bg-green-50';
+                }
+                row.className = rowClass;
                 
-                row.innerHTML = `
-                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">${date.toLocaleDateString('th-TH')}</td>
-                    <td class="px-6 py-3 text-sm text-gray-500">${j.item_no}</td>
-                    <td class="px-6 py-3 text-sm font-medium text-gray-900 inline-editable cursor-pointer" data-field="customerName">${j.customerName}</td>
-                    <td class="px-6 py-3 text-sm text-gray-500 inline-editable cursor-pointer" data-field="device">${j.device}</td>
-                    <td class="px-6 py-3 text-sm text-center inline-editable cursor-pointer" data-field="revenue">${showMoney(j.revenue)}</td>
-                    <td class="px-6 py-3 text-sm text-center inline-editable cursor-pointer" data-field="cost">${showMoney(j.cost, true)}</td>
-                    <td class="px-6 py-3 text-center flex items-center justify-center space-x-4">
-                        <input type="checkbox" class="job-cb h-4 w-4" ${j.isChecked ? 'checked' : ''} data-id="${j.id}">
-                        <button class="text-red-600 hover:text-red-900 ml-4" onclick="confirmDelete('${j.id}')">ลบ</button>
-                    </td>
-                `;
-                lastDate = j.date;
+                let revenueHTML = '', costHTML = '';
+                if (job.revenue === 'claim') {
+                    revenueHTML = `<span class="text-red-600 font-medium">งานเคลม</span>`;
+                } else if (job.revenue === 'refund' || (typeof job.revenue === 'number' && job.revenue < 0)) {
+                    const refundAmount = typeof job.revenue === 'number' ? Math.abs(job.revenue).toLocaleString() : '';
+                    revenueHTML = `<span class="text-red-600 font-medium">คืนเงิน(${refundAmount})</span>`;
+                } else if (typeof job.revenue === 'number') {
+                    revenueHTML = `<span class="text-green-600">${job.revenue.toLocaleString()}</span>`;
+                } else {
+                    revenueHTML = `<span class="text-yellow-500 font-medium">รอดำเนินการ</span>`;
+                }
+
+                if (typeof job.cost === 'number') costHTML = `<span class="text-red-600">${job.cost.toLocaleString()}</span>`;
+                else if (job.cost === 'no_cost') costHTML = `<span class="text-gray-500">-</span>`;
+                else costHTML = `<span class="text-yellow-500 font-medium">รอดำเนินการ</span>`;
+                
+                row.innerHTML = `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${dateObj.toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'})}</td><td class="px-6 py-4 text-sm text-gray-500">${job.item_no}</td><td class="px-6 py-4 text-sm font-medium text-gray-900 inline-editable cursor-pointer" data-field="customerName">${job.customerName}</td><td class="px-6 py-4 text-sm text-gray-500 inline-editable cursor-pointer" data-field="device">${job.device}</td><td class="px-6 py-4 text-sm text-center inline-editable cursor-pointer" data-field="revenue">${revenueHTML}</td><td class="px-6 py-4 text-sm text-center inline-editable cursor-pointer" data-field="cost">${costHTML}</td><td class="px-6 py-4 text-left text-sm font-medium flex items-center space-x-4"><input type="checkbox" data-id="${job.id}" class="job-checkbox h-4 w-4 text-blue-600" ${job.isChecked ? 'checked' : ''}><button class="ml-6 text-red-600 hover:text-red-900" onclick="showDeleteModal(event, 'job', '${job.id}')">ลบ</button></td>`;
+                currentDay = dateStr;
             });
-            document.querySelectorAll('.job-cb').forEach(cb => cb.onchange = (e) => toggleJobCheck(e.target.dataset.id, e.target.checked));
+            document.querySelectorAll('.job-checkbox').forEach(cb => cb.addEventListener('change', handleJobCheckboxChange));
             updateCheckAllState();
         }
 
-        function updateSummary(jobs) {
-            const monthly = {};
-            jobs.forEach(j => {
-                const monthKey = j.date.substring(0, 7);
-                if (!monthly[monthKey]) monthly[monthKey] = { rev: 0, cost: 0, notes: {} };
-                const note = j.device;
-                if (!monthly[monthKey].notes[note]) monthly[monthKey].notes[note] = { count: 0, rev: 0, cost: 0, refundCount: 0 };
+        function updateCheckAllState() {
+            const checkboxes = document.querySelectorAll('#jobs-list .job-checkbox');
+            const total = checkboxes.length;
+            if (total === 0) { checkAllJobs.checked = false; checkAllJobs.indeterminate = false; return; }
+            const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+            checkAllJobs.checked = checkedCount === total;
+            checkAllJobs.indeterminate = checkedCount > 0 && checkedCount < total;
+        }
+
+        function handleJobCheckboxChange(e) {
+            const isChecked = e.target.checked, jobId = e.target.dataset.id, row = e.target.closest('tr');
+            const job = allJobs.find(j => j.id === jobId);
+            if (job) job.isChecked = isChecked;
+            const isRefund = job.revenue === 'claim' || job.revenue === 'refund' || (typeof job.revenue === 'number' && job.revenue < 0);
+            const isZeroRevenue = typeof job.revenue === 'number' && job.revenue === 0;
+            if (!isRefund && !isZeroRevenue) row.classList.toggle('bg-green-50', isChecked);
+            updateSummary();
+            updateCheckStatus(jobId, isChecked);
+            updateCheckAllState();
+        }
+        
+        function getCurrentlyFilteredJobs() {
+            const selectedMonth = historyMonthSelect.value;
+            const selectedYear = historyYearSelect.value;
+            let jobs = allJobs.filter(j => j && j.date); 
+
+            if (selectedYear) {
+                jobs = jobs.filter(j => new Date(j.date).getFullYear() == selectedYear);
+            }
+            if (selectedMonth) {
+                jobs = jobs.filter(j => (new Date(j.date).getMonth() + 1) == selectedMonth);
+            }
+            return jobs;
+        }
+        
+        function renderJobCounts(jobs) { jobCountSummary.innerHTML = `<div class="p-4 rounded-lg bg-blue-100 text-blue-700 font-semibold"><p class="text-sm">รวมจำนวนรายการทั้งหมด</p><p class="text-2xl mt-1">${jobs.length} รายการ</p></div>`; }
+        
+        function updateSummary() {
+            const jobsForSummary = getCurrentlyFilteredJobs().filter(job => job.isChecked);
+            renderSummary(jobsForSummary);
+        }
+
+        function renderSummary(jobs) {
+            summaryContainer.innerHTML = '';
+            
+            if (jobs.length === 0) {
+                summaryContainer.innerHTML = '<p class="text-center text-gray-500">กรุณาเลือกรายการเพื่อดูสรุป</p>';
+                return;
+            }
+
+            const summary = { totalRevenue: 0, totalCost: 0, notes: {} };
+            
+            jobs.forEach(job => {
+                const note = job.device;
+                if (!summary.notes[note]) {
+                    summary.notes[note] = { count: 0, revenue: 0, cost: 0, refundCount: 0 };
+                }
+                summary.notes[note].count++;
                 
-                monthly[monthKey].notes[note].count++;
-                if (j.revenue === 'refund' || (typeof j.revenue === 'number' && j.revenue < 0)) {
-                    monthly[monthKey].notes[note].refundCount++;
+                const isNonContributingRevenue = job.revenue === 'refund' || job.revenue === 'claim' || (typeof job.revenue === 'number' && job.revenue < 0);
+                const cost = typeof job.cost === 'number' ? job.cost : 0;
+                summary.totalCost += cost;
+                summary.notes[note].cost += cost;
+
+                if (isNonContributingRevenue) {
+                    if (job.revenue !== 'claim') {
+                        summary.notes[note].refundCount++;
+                    }
                 } else {
-                    const r = (typeof j.revenue === 'number' && j.revenue > 0) ? j.revenue : 0;
-                    const c = typeof j.cost === 'number' ? j.cost : 0;
-                    monthly[monthKey].rev += r;
-                    monthly[monthKey].cost += c;
-                    monthly[monthKey].notes[note].rev += r;
-                    monthly[monthKey].notes[note].cost += c;
+                    const revenue = typeof job.revenue === 'number' ? job.revenue : 0;
+                    summary.totalRevenue += revenue;
+                    summary.notes[note].revenue += revenue;
                 }
             });
 
-            summaryContainer.innerHTML = '';
-            const sortedMonthKeys = Object.keys(monthly).sort();
-            
-            if (sortedMonthKeys.length === 0) {
-                summaryContainer.innerHTML = '<p class="text-center text-gray-500">ติ๊กรายการที่ต้องการสรุป</p>';
-                return;
+            const selectedMonth = historyMonthSelect.value;
+            const selectedYear = historyYearSelect.value;
+            let title = '';
+
+            if (selectedMonth && selectedYear) {
+                const monthName = thaiMonths[parseInt(selectedMonth) - 1];
+                const thaiYear = parseInt(selectedYear) + 543;
+                title = `${monthName} ${thaiYear}`;
+            } else if (selectedYear) {
+                const thaiYear = parseInt(selectedYear) + 543;
+                title = `ปี ${thaiYear}`;
+            } else {
+                title = 'สรุปทั้งหมด (ตามที่เลือก)';
             }
 
-            sortedMonthKeys.forEach(monthKey => {
-                const s = monthly[monthKey];
-                const [year, month] = monthKey.split('-');
-                const profit = s.rev - s.cost;
-                const monthDiv = document.createElement('div');
-                monthDiv.className = 'bg-gray-50 p-4 rounded-lg shadow-inner';
-                
-                const notesHtml = Object.keys(s.notes).sort((a,b) => s.notes[b].count - s.notes[a].count).map(note => {
-                    const ns = s.notes[note], nProfit = ns.rev - ns.cost;
-                    const countText = ns.refundCount > 0 ? `(${ns.count} รายการ, คืนเงิน ${ns.refundCount})` : `(${ns.count} รายการ)`;
-                    return `
-                        <li class="p-2 bg-white border rounded flex flex-col sm:flex-row justify-between items-start sm:items-center hover:shadow-md transition-shadow cursor-pointer note-summary-item" data-note="${note}" data-monthkey="${monthKey}">
-                            <span class="font-bold text-gray-800 hover:text-blue-600 transition-colors">${note}</span>
-                            <div class="flex flex-wrap gap-x-4 text-sm mt-1 sm:mt-0">
-                                <span class="text-gray-500">${countText}</span>
-                                <span class="text-green-600">รับ: ${ns.rev.toLocaleString()}</span>
-                                <span class="text-red-600">ทุน: ${ns.cost.toLocaleString()}</span>
-                                <span class="${nProfit >= 0 ? 'text-blue-600' : 'text-red-600'} font-bold">กำไร: ${nProfit.toLocaleString()}</span>
-                            </div>
-                        </li>`;
-                }).join('');
+            const totalProfit = summary.totalRevenue - summary.totalCost;
+            const costPercentage = summary.totalRevenue > 0 ? ((summary.totalCost / summary.totalRevenue) * 100).toFixed(2) : 0;
+            const summaryDiv = document.createElement('div');
+            summaryDiv.className = 'bg-gray-50 p-4 rounded-lg shadow-inner';
 
-                monthDiv.innerHTML = `
-                    <h3 class="text-xl font-bold mb-3 text-gray-800">${thaiMonths[parseInt(month) - 1]} ${parseInt(year) + 543}</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center mb-4">
-                        <div class="p-3 bg-green-100 text-green-700 rounded-lg font-bold">รับรวม: ${s.rev.toLocaleString()}</div>
-                        <div class="p-3 bg-red-100 text-red-700 rounded-lg font-bold">ทุนรวม: ${s.cost.toLocaleString()}</div>
-                        <div class="p-3 ${profit >= 0 ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'} rounded-lg font-bold">กำไร: ${profit.toLocaleString()}</div>
+            const notesHtml = Object.keys(summary.notes).sort((a,b) => summary.notes[b].count - summary.notes[a].count).map(note => {
+                const ns = summary.notes[note];
+                const profit = ns.revenue - ns.cost;
+                const countText = ns.refundCount > 0 ? `(${ns.count} รายการ, คืนเงิน ${ns.refundCount})` : `(${ns.count} รายการ)`;
+                return `<li class="note-summary-item flex flex-col sm:flex-row justify-between items-start sm:items-center p-2 rounded-md bg-white border hover:shadow-md hover:-translate-y-1 transform transition-all duration-200 cursor-pointer" data-note="${note}"><span class="font-semibold text-lg text-gray-900">${note}</span><div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm mt-1 sm:mt-0"><span class="text-gray-600">${countText}</span><span class="text-green-600">รับ: ${ns.revenue.toLocaleString()}</span><span class="text-red-600">ทุน: ${ns.cost.toLocaleString()}</span><span class="${profit >= 0 ? 'text-blue-600':'text-red-600'}">กำไร: ${profit.toLocaleString()}</span></div></li>`;
+            }).join('');
+
+            summaryDiv.innerHTML = `
+                <h3 class="text-xl font-bold mb-2 text-gray-800">${title}</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center text-lg font-semibold mb-4">
+                    <div class="p-3 rounded-lg bg-green-100 text-green-700 flex flex-col justify-center"><span>รับรวม: ${summary.totalRevenue.toLocaleString()}</span></div>
+                    <div class="p-3 rounded-lg bg-red-100 text-red-700 flex flex-col justify-center">
+                        <span>ทุนรวม: ${summary.totalCost.toLocaleString()}</span>
+                        <span class="text-sm font-normal">(${costPercentage}%)</span>
                     </div>
-                    <ul class="space-y-2">${notesHtml}</ul>
-                `;
-                summaryContainer.appendChild(monthDiv);
-            });
-        }
-
-        function updateHolidayAndChart() {
-            const y = chartYearSelect.value, m = chartMonthSelect.value;
-            if (y && m) fetchHolidays(y, m, renderChart);
-        }
-
-        // --- POP-UP LOGIC ---
-        function showDayJobs(day) {
-            const m = chartMonthSelect.value, y = chartYearSelect.value;
-            const dateStr = `${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-            const jobs = allJobs.filter(j => j.date === dateStr);
-            noteJobsModalTitle.textContent = `รายการวันที่ ${day} ${thaiMonths[parseInt(m)-1]} ${parseInt(y)+543}`;
-            renderModalList(jobs);
-            noteJobsModal.style.display = 'flex';
-        }
-
-        function showNoteJobsModal(note, monthKey) {
-            // กรองรายการ: 1. เฉพาะงานในหมวดหมู่ที่เลือก 2. เฉพาะงานที่อยู่ในเดือน/ปี ที่ระบุ 3. เฉพาะงานที่ถูก Checked ไว้
-            const jobsForNote = allJobs.filter(j => 
-                j.device === note && 
-                j.date.startsWith(monthKey) && 
-                j.isChecked === true
-            ).sort((a,b) => new Date(a.date) - new Date(b.date));
-            
-            const [y, m] = monthKey.split('-');
-            noteJobsModalTitle.textContent = `รายการ "${note}" - ${thaiMonths[parseInt(m)-1]} ${parseInt(y)+543}`;
-            renderModalList(jobsForNote);
-            noteJobsModal.style.display = 'flex';
-        }
-
-        function renderModalList(jobs) {
-            if (!jobs.length) {
-                noteJobsModalList.innerHTML = '<p class="text-center p-8 text-gray-500">ไม่พบรายการ</p>';
-                return;
-            }
-            noteJobsModalList.innerHTML = jobs.map(j => `
-                <div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="font-bold text-gray-900">${j.customerName}</p>
-                            <p class="text-xs text-gray-500">${new Date(j.date).toLocaleDateString('th-TH', {day:'numeric', month:'short', year:'2-digit'})}</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-sm font-bold text-green-600">${typeof j.revenue === 'number' ? j.revenue.toLocaleString() + ' บ.' : (j.revenue === 'claim' ? 'งานเคลม' : 'รอดำเนินการ')}</p>
-                            <p class="text-xs text-red-500">ทุน: ${typeof j.cost === 'number' ? j.cost.toLocaleString() + ' บ.' : '-'}</p>
-                        </div>
-                    </div>
+                    <div class="p-3 rounded-lg ${totalProfit >= 0 ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'} flex flex-col justify-center"><span>กำไร: ${totalProfit.toLocaleString()}</span></div>
                 </div>
-            `).join('');
+                <h4 class="text-base font-semibold mb-2 text-gray-700">สรุปตามหมายเหตุ:</h4>
+                <ul class="space-y-2">${notesHtml}</ul>
+            `;
+            
+            summaryContainer.appendChild(summaryDiv);
         }
 
-        // --- CHARTING FUNCTIONS ---
         function renderChart() {
-            if (currentChartView === 'daily') renderDailyChart();
-            else renderMonthlyChart();
+            if (currentChartView === 'daily') {
+                renderDailyTrendChart();
+            } else {
+                renderMonthlyTrendChart();
+            }
         }
 
-        function renderDailyChart() {
-            const m = chartMonthSelect.value, y = chartYearSelect.value;
-            const canvas = document.getElementById('main-chart'), ph = document.getElementById('chart-placeholder');
-            if (!m || !y) { canvas.classList.add('hidden'); ph.classList.remove('hidden'); return; }
-            
-            const daysInMonth = new Date(y, m, 0).getDate();
-            const labels = Array.from({length: daysInMonth}, (_, i) => i + 1);
-            const dailyProfit = Array(daysInMonth).fill(0);
-            
-            allJobs.filter(j => {
-                const d = new Date(j.date);
-                return d.getFullYear() == y && (d.getMonth()+1) == m;
-            }).forEach(j => {
-                const day = new Date(j.date).getDate() - 1;
-                const r = (typeof j.revenue === 'number' && j.revenue > 0) ? j.revenue : 0;
-                const c = (typeof j.cost === 'number') ? j.cost : 0;
-                dailyProfit[day] += (r - c);
-            });
+        function renderDailyTrendChart() {
+            const selectedMonth = chartMonthSelect.value;
+            const selectedYear = chartYearSelect.value;
+            if (!selectedMonth || !selectedYear) {
+                const chartCanvas = document.getElementById('main-chart');
+                const chartPlaceholder = document.getElementById('chart-placeholder');
+                chartCanvas.classList.add('hidden');
+                chartPlaceholder.classList.remove('hidden');
+                chartPlaceholder.textContent = 'กรุณาเลือกเดือนและปีเพื่อแสดงกราฟ';
+                if (mainChartInstance) {
+                    mainChartInstance.destroy();
+                    mainChartInstance = null;
+                }
+                return;
+            }
 
-            const goal = parseFloat(profitGoalInput.value) || 2800; // ปรับค่าเริ่มต้นเป็น 2800
-            canvas.classList.remove('hidden'); ph.classList.add('hidden');
-            if (mainChartInstance) mainChartInstance.destroy();
+            fetchHolidays(selectedYear, selectedMonth, () => {
+                const chartCanvas = document.getElementById('main-chart');
+                const chartPlaceholder = document.getElementById('chart-placeholder');
+                const chartSummaryContainer = document.getElementById('chart-summary-container');
+                const profitGoal = parseFloat(profitGoalInput.value) || 3000;
+                const holidays = holidaysForCurrentMonth;
+
+                chartSummaryContainer.innerHTML = '';
+
+                const jobsForChart = allJobs.filter(job => {
+                    const jobDate = new Date(job.date);
+                    return jobDate.getFullYear() == selectedYear && (jobDate.getMonth() + 1) == selectedMonth;
+                });
+
+                if (jobsForChart.length === 0 && holidays.length === 0) {
+                    chartCanvas.classList.add('hidden');
+                    chartPlaceholder.classList.remove('hidden');
+                    chartPlaceholder.textContent = 'ไม่มีข้อมูลสำหรับเดือนและปีที่เลือก';
+                    if (mainChartInstance) {
+                        mainChartInstance.destroy();
+                        mainChartInstance = null;
+                    }
+                    return;
+                }
+
+                chartCanvas.classList.remove('hidden');
+                chartPlaceholder.classList.add('hidden');
+
+                const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+                const labels = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+                const dailyRevenue = Array(daysInMonth).fill(0);
+                const dailyCost = Array(daysInMonth).fill(0);
+
+                jobsForChart.forEach(job => {
+                    const dayOfMonth = new Date(job.date).getDate() - 1; 
+                    if (typeof job.revenue === 'number' && job.revenue > 0) {
+                        dailyRevenue[dayOfMonth] += job.revenue;
+                    }
+                    if (typeof job.cost === 'number') {
+                        dailyCost[dayOfMonth] += job.cost;
+                    }
+                });
+
+                const dailyProfit = dailyRevenue.map((revenue, index) => revenue - dailyCost[index]);
+                
+                const totalProfit = dailyProfit.reduce((sum, p) => sum + p, 0);
+
+                const revenueDaysCount = dailyRevenue.filter((r, index) => {
+                    return r > 0 || dailyCost[index] > 0;
+                }).length;
+
+                const successfulDays = dailyProfit.filter((p, index) => {
+                    return p >= profitGoal;
+                }).length;
+
+                const averageProfit = revenueDaysCount > 0 ? totalProfit / revenueDaysCount : 0;
+                const successPercentage = revenueDaysCount > 0 ? (successfulDays / revenueDaysCount) * 100 : 0;
+
+
+                chartSummaryContainer.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                        <div class="p-3 rounded-lg bg-blue-100 text-blue-800 flex flex-col justify-center">
+                            <p class="text-sm font-medium">กำไรรวมทั้งเดือน</p>
+                            <p class="text-2xl font-bold">${totalProfit.toLocaleString('th-TH')} บาท</p>
+                        </div>
+                        <div class="p-3 rounded-lg bg-green-100 text-green-800 flex flex-col justify-center">
+                            <p class="text-sm font-medium">เฉลี่ยกำไร/วัน</p>
+                            <p class="text-2xl font-bold">${averageProfit.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท</p>
+                        </div>
+                        <div class="p-3 rounded-lg bg-purple-100 text-purple-800 flex flex-col justify-center">
+                            <p class="text-sm font-medium">สำเร็จตามเป้าหมาย</p>
+                            <p class="text-2xl font-bold">${successPercentage.toFixed(1)}%</p>
+                            <p class="text-xs text-purple-600">(${successfulDays} จาก ${revenueDaysCount} วันทำงาน)</p>
+                        </div>
+                    </div>
+                `;
+
+                if (mainChartInstance) {
+                    mainChartInstance.destroy();
+                }
+                
+                const ctx = chartCanvas.getContext('2d');
+                mainChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'กำไร',
+                                data: dailyProfit,
+                                backgroundColor: dailyProfit.map((p, index) => {
+                                    const day = labels[index];
+                                    if (holidays.includes(day)) {
+                                        return 'rgba(156, 163, 175, 0.7)'; // gray-400
+                                    }
+                                    return p >= profitGoal ? 'rgba(52, 211, 153, 0.8)' : 'rgba(248, 113, 113, 0.8)';
+                                }),
+                                hoverBackgroundColor: dailyProfit.map((p, index) => {
+                                    const day = labels[index];
+                                    if (holidays.includes(day)) {
+                                        return 'rgba(107, 114, 128, 1)'; // gray-500
+                                    }
+                                    return p >= profitGoal ? 'rgba(16, 185, 129, 1)' : 'rgba(239, 68, 68, 1)';
+                                }),
+                                borderRadius: 6,
+                                borderWidth: 0,
+                                hoverBorderWidth: 2,
+                                hoverBorderColor: 'rgba(31, 41, 55, 0.5)'
+                            }
+                        ]
+                    },
+                    options: {
+                        onClick: (event, elements, chart) => {
+                            if (currentChartView !== 'daily') return;
+                            if (elements.length > 0) {
+                                const chartElement = elements[0];
+                                const dayIndex = chartElement.index;
+                                const day = dayIndex + 1;
+                                showJobsForDayModal(day, selectedMonth, selectedYear);
+                            }
+                        },
+                        onHover: (event, chartElement, chart) => {
+                            const canvas = event.native.target;
+                            canvas.style.cursor = chartElement[0] ? 'pointer' : 'default';
+                        },
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false },
+                            title: { display: true, text: `สรุปกำไรรายวันเดือน ${thaiMonths[selectedMonth-1]} ปี ${parseInt(selectedYear)+543}` },
+                            tooltip: {
+                                backgroundColor: 'rgba(31, 41, 55, 0.9)',
+                                titleColor: '#f3f4f6',
+                                bodyColor: '#d1d5db',
+                                footerColor: '#ffffff',
+                                footerFont: { weight: 'bold' },
+                                borderRadius: 8,
+                                padding: 12,
+                                boxPadding: 4,
+                                callbacks: {
+                                    title: function(context) {
+                                        if (!context.length) return '';
+                                        const day = context[0].label;
+                                        const monthName = thaiMonths[selectedMonth-1];
+                                        const yearThai = parseInt(selectedYear) + 543;
+                                        return `วันที่ ${day} ${monthName} ${yearThai}`;
+                                    },
+                                    label: function(context) {
+                                        if (context.dataIndex >= 0 && context.dataIndex < dailyRevenue.length) {
+                                            const index = context.dataIndex;
+                                            const revenue = dailyRevenue[index];
+                                            if (typeof revenue === 'number') {
+                                                 return `รายรับทั้งหมด: ${revenue.toLocaleString()} บาท`;
+                                            }
+                                        }
+                                        return '';
+                                    },
+                                    afterLabel: function(context) {
+                                        if (context.dataIndex >= 0 && context.dataIndex < dailyCost.length) {
+                                            const index = context.dataIndex;
+                                            const cost = dailyCost[index];
+                                            if (typeof cost === 'number') {
+                                                return `ต้นทุนรวม: ${cost.toLocaleString()} บาท`;
+                                            }
+                                        }
+                                        return '';
+                                    },
+                                    footer: function(context) {
+                                        if (context.length > 0) {
+                                            const index = context[0].dataIndex;
+                                            if (index >= 0 && index < dailyProfit.length) {
+                                                const day = index + 1;
+                                                const profit = dailyProfit[index];
+                                                if (holidays.includes(day)) {
+                                                    return '\nวันหยุด';
+                                                }
+                                                if (typeof profit === 'number') {
+                                                    return `\nกำไร: ${profit.toLocaleString()} บาท`;
+                                                }
+                                            }
+                                        }
+                                        return '';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                 grid: { color: '#e5e7eb' }
+                            },
+                            x: {
+                                 grid: { display: false },
+                                 ticks: {
+                                    maxRotation: 0,
+                                    minRotation: 0,
+                                    callback: function(value, index) {
+                                        const day = this.getLabelForValue(value);
+                                        if(holidays.includes(parseInt(day))) {
+                                            return 'หยุด';
+                                        }
+                                        return day;
+                                    },
+                                    color: function(context) {
+                                        const day = context.chart.data.labels[context.index];
+                                        if(holidays.includes(day)) {
+                                            return 'red';
+                                        }
+                                        return '#6B7280'; // gray-500
+                                    },
+                                    font: function(context) {
+                                        const day = context.chart.data.labels[context.index];
+                                        if(holidays.includes(day)) {
+                                            return { size: 10 };
+                                        }
+                                        return { size: 12 };
+                                    }
+                                 }
+                            }
+                        }
+                    },
+                    plugins: [{
+                        id: 'customDataLabels',
+                        afterDatasetsDraw: (chart) => {
+                            const { ctx } = chart;
+                            ctx.save();
+                            ctx.font = '11px Sarabun';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'bottom';
+                            const profitDatasetMeta = chart.getDatasetMeta(0);
+                            profitDatasetMeta.data.forEach((bar, index) => {
+                                const data = chart.data.datasets[0].data[index];
+                                if (data !== null && data !== 0) {
+                                    const value = data.toLocaleString();
+                                    const yPos = bar.y + (data >= 0 ? -5 : 18); 
+                                    ctx.fillStyle = data >= 0 ? 'rgba(0, 0, 0, 0.8)' : 'rgba(200, 0, 0, 1)';
+                                    ctx.fillText(value, bar.x, yPos);
+                                }
+                            });
+                            ctx.restore();
+                        }
+                    }]
+                });
+            });
+        }
+
+        function renderMonthlyTrendChart() {
+            const chartCanvas = document.getElementById('main-chart');
+            const chartPlaceholder = document.getElementById('chart-placeholder');
+            const chartSummaryContainer = document.getElementById('chart-summary-container');
+            const selectedYear = chartYearSelect.value;
             
-            mainChartInstance = new Chart(canvas.getContext('2d'), {
+            chartSummaryContainer.innerHTML = '';
+
+            if (!selectedYear) {
+                chartCanvas.classList.add('hidden');
+                chartPlaceholder.classList.remove('hidden');
+                chartPlaceholder.textContent = 'กรุณาเลือกปีเพื่อแสดงกราฟ';
+                if (mainChartInstance) {
+                    mainChartInstance.destroy();
+                    mainChartInstance = null;
+                }
+                return;
+            }
+
+            const jobsForChart = allJobs.filter(job => new Date(job.date).getFullYear() == selectedYear);
+            
+            chartCanvas.classList.remove('hidden');
+            chartPlaceholder.classList.add('hidden');
+
+            const monthlyProfits = Array(12).fill(0);
+            const monthlyRevenues = Array(12).fill(0);
+            const monthlyCosts = Array(12).fill(0);
+
+            jobsForChart.forEach(job => {
+                const monthIndex = new Date(job.date).getMonth();
+                const revenue = (typeof job.revenue === 'number' && job.revenue > 0) ? job.revenue : 0;
+                const cost = (typeof job.cost === 'number') ? job.cost : 0;
+                monthlyRevenues[monthIndex] += revenue;
+                monthlyCosts[monthIndex] += cost;
+                monthlyProfits[monthIndex] += (revenue - cost);
+            });
+            
+            const totalYearlyProfit = monthlyProfits.reduce((a, b) => a + b, 0);
+            const monthsWithRevenue = monthlyProfits.filter(p => p !== 0).length;
+            const averageMonthlyProfit = monthsWithRevenue > 0 ? totalYearlyProfit / monthsWithRevenue : 0;
+            const maxProfit = Math.max(...monthlyProfits);
+            const bestMonthIndex = monthlyProfits.indexOf(maxProfit);
+            const bestMonth = thaiMonths[bestMonthIndex];
+
+            chartSummaryContainer.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                    <div class="p-3 rounded-lg bg-blue-100 text-blue-800 flex flex-col justify-center">
+                        <p class="text-sm font-medium">กำไรรวมทั้งปี</p>
+                        <p class="text-2xl font-bold">${totalYearlyProfit.toLocaleString('th-TH')} บาท</p>
+                    </div>
+                    <div class="p-3 rounded-lg bg-green-100 text-green-800 flex flex-col justify-center">
+                        <p class="text-sm font-medium">เฉลี่ยกำไร/เดือน</p>
+                        <p class="text-2xl font-bold">${averageMonthlyProfit.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท</p>
+                    </div>
+                    <div class="p-3 rounded-lg bg-purple-100 text-purple-800 flex flex-col justify-center">
+                        <p class="text-sm font-medium">เดือนที่กำไรสูงสุด</p>
+                        <p class="text-2xl font-bold">${bestMonth}</p>
+                        <p class="text-xs text-purple-600">(${maxProfit.toLocaleString('th-TH')} บาท)</p>
+                    </div>
+                </div>`;
+
+            if (mainChartInstance) {
+                mainChartInstance.destroy();
+            }
+
+            const ctx = chartCanvas.getContext('2d');
+            mainChartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: labels,
+                    labels: thaiMonths,
                     datasets: [{
-                        label: 'กำไร',
-                        data: dailyProfit,
-                        backgroundColor: dailyProfit.map((p, i) => {
-                            if (holidaysForCurrentMonth.includes(i + 1)) return 'rgba(156, 163, 175, 0.7)';
-                            return p >= goal ? 'rgba(52, 211, 153, 0.8)' : 'rgba(248, 113, 113, 0.8)';
-                        }),
-                        borderRadius: 4
+                        label: 'กำไรรายเดือน',
+                        data: monthlyProfits,
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                        hoverBackgroundColor: 'rgba(37, 99, 235, 1)',
+                        borderRadius: 6,
+                        borderWidth: 0,
                     }]
                 },
                 options: {
                     responsive: true,
-                    onClick: (e, elements) => { if(elements.length) showDayJobs(elements[0].index + 1); },
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true },
-                        x: {
-                            ticks: {
-                                callback: function(val, idx) {
-                                    const dayNum = this.getLabelForValue(val);
-                                    return holidaysForCurrentMonth.includes(parseInt(dayNum)) ? '●' : dayNum;
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: `สรุปกำไรรายเดือน ปี ${parseInt(selectedYear) + 543}` },
+                        tooltip: {
+                            backgroundColor: 'rgba(31, 41, 55, 0.9)',
+                            titleColor: '#f3f4f6',
+                            bodyColor: '#d1d5db',
+                            footerColor: '#ffffff',
+                            footerFont: { weight: 'bold' },
+                            borderRadius: 8,
+                            padding: 12,
+                            boxPadding: 4,
+                            callbacks: {
+                                title: function(context) {
+                                    const monthName = context[0].label;
+                                    const yearThai = parseInt(selectedYear) + 543;
+                                    return `${monthName} ${yearThai}`;
                                 },
-                                color: (ctx) => holidaysForCurrentMonth.includes(ctx.index + 1) ? 'red' : '#6B7280',
-                                font: { size: 12 }
+                                label: function(context) {
+                                    if (context.dataIndex >= 0 && context.dataIndex < monthlyRevenues.length) {
+                                        const index = context.dataIndex;
+                                        const revenue = monthlyRevenues[index];
+                                        if (typeof revenue === 'number') {
+                                            return `รายรับทั้งหมด: ${revenue.toLocaleString()} บาท`;
+                                        }
+                                    }
+                                    return '';
+                                },
+                                afterLabel: function(context) {
+                                     if (context.dataIndex >= 0 && context.dataIndex < monthlyCosts.length) {
+                                        const index = context.dataIndex;
+                                        const cost = monthlyCosts[index];
+                                        if (typeof cost === 'number') {
+                                            return `ต้นทุนรวม: ${cost.toLocaleString()} บาท`;
+                                        }
+                                    }
+                                    return '';
+                                },
+                                footer: function(context) {
+                                    if (context.length > 0) {
+                                        const index = context[0].dataIndex;
+                                        if (index >= 0 && index < monthlyProfits.length) {
+                                            const profit = monthlyProfits[index];
+                                            if (typeof profit === 'number') {
+                                                return `\nกำไร: ${profit.toLocaleString()} บาท`;
+                                            }
+                                        }
+                                    }
+                                    return '';
+                                }
                             }
                         }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#e5e7eb' } },
+                        x: { grid: { display: false } }
                     }
-                }
-            });
-        }
-
-        function renderMonthlyChart() {
-            const y = chartYearSelect.value;
-            const canvas = document.getElementById('main-chart'), ph = document.getElementById('chart-placeholder');
-            if (!y) { canvas.classList.add('hidden'); ph.classList.remove('hidden'); return; }
-            
-            const monthlyProfit = Array(12).fill(0);
-            allJobs.filter(j => new Date(j.date).getFullYear() == y).forEach(j => {
-                const month = new Date(j.date).getMonth();
-                const r = (typeof j.revenue === 'number' && j.revenue > 0) ? j.revenue : 0;
-                const c = (typeof j.cost === 'number') ? j.cost : 0;
-                monthlyProfit[month] += (r - c);
-            });
-
-            canvas.classList.remove('hidden'); ph.classList.add('hidden');
-            if (mainChartInstance) mainChartInstance.destroy();
-            mainChartInstance = new Chart(canvas.getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: thaiMonths,
-                    datasets: [{ label: 'กำไรรายเดือน', data: monthlyProfit, backgroundColor: 'rgba(59, 130, 246, 0.8)', borderRadius: 4 }]
                 },
-                options: { responsive: true, plugins: { legend: { display: false } } }
+                plugins: [{
+                    id: 'monthlyDataLabels',
+                    afterDatasetsDraw: (chart) => {
+                        const { ctx } = chart;
+                        ctx.save();
+                        ctx.font = '11px Sarabun';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
+
+                        const datasetMeta = chart.getDatasetMeta(0);
+                        datasetMeta.data.forEach((bar, index) => {
+                            const data = chart.data.datasets[0].data[index];
+                            if (data !== null && data !== 0) {
+                                const value = data.toLocaleString();
+                                const yPos = bar.y + (data >= 0 ? -5 : 18); 
+                                ctx.fillStyle = data >= 0 ? 'rgba(0, 0, 0, 0.8)' : 'rgba(200, 0, 0, 1)';
+                                ctx.fillText(value, bar.x, yPos);
+                            }
+                        });
+                        ctx.restore();
+                    }
+                }]
             });
         }
-
-        // --- REMAINING COMPONENT RENDERING ---
-        function renderNotesList(notes) {
-            const v = deviceSelect.value;
-            const items = [...new Set(notes.map(n => n.note))].sort();
-            deviceSelect.innerHTML = '<option value="งานหน้าร้าน">งานหน้าร้าน</option>' + items.filter(n => n !== 'งานหน้าร้าน').map(n => `<option value="${n}">${n}</option>`).join('');
-            deviceSelect.value = v || 'งานหน้าร้าน';
-            document.getElementById('notes-list-container').innerHTML = notes.map(n => `
-                <li class="flex justify-between p-2 bg-gray-50 border rounded">
-                    <span>${n.note}</span>
-                    <button class="text-red-500 text-xs font-bold hover:underline" onclick="deleteNote('${n.note}')">ลบ</button>
-                </li>
-            `).join('');
-        }
-
-        function renderSpareParts() {
-            const q = sparePartSearch.value.toLowerCase().trim();
-            const filtered = allSpareParts.filter(p => p.partName.toLowerCase().includes(q));
-            sparePartsListContainer.innerHTML = filtered.map(p => `
-                <li class="flex justify-between p-2 bg-white border rounded">
-                    <div>
-                        <div class="font-bold">${p.partName}</div>
-                        <div class="text-xs text-gray-400">อัปเดต: ${new Date(p.lastUpdated).toLocaleDateString('th-TH')}</div>
-                    </div>
-                    <div class="flex items-center space-x-3">
-                        <span class="text-blue-600 font-bold">${Number(p.price).toLocaleString()}</span>
-                        <button class="text-yellow-500 text-xs font-bold" onclick="editPart('${p.id}')">แก้ไข</button>
-                        <button class="text-red-500 text-xs font-bold" onclick="confirmDeletePart('${p.id}')">ลบ</button>
-                    </div>
-                </li>
-            `).join('');
-        }
-
-        // --- ACTIONS & API WRAPPERS ---
-        function toggleJobCheck(id, checked) {
-            const job = allJobs.find(j => j.id === id);
-            if (job) job.isChecked = checked;
-            filterAndRenderJobs();
-            callApi('update_check_status', { data: { id, isChecked: checked } }, 'handleGenericResponse');
-        }
-
-        function updateAllCheckStatus(checked) {
-            const ids = Array.from(jobsList.querySelectorAll('tr[data-id]')).map(tr => tr.dataset.id);
-            if (ids.length) {
-                callApi('update_all_check_status', { ids, isChecked: checked }, 'handleGenericResponse');
-            }
-        }
-
-        function saveJob(jobData) {
-            callApi('save_repair', { data: jobData }, 'handleSaveRepair');
-            window.handleSaveRepair = res => {
-                if (res.status === 'success') {
-                    jobData.id = res.id;
-                    jobData.createdAt = Date.now();
-                    jobData.isChecked = false;
-                    allJobs.push(jobData);
-                    filterAndRenderJobs();
-                    showToast('บันทึกสำเร็จ');
-                }
-                document.getElementById('handleSaveRepair')?.remove();
-            };
-        }
-
-        function updateJob(id, data) {
-            const job = allJobs.find(j => j.id === id);
-            if (job) {
-                Object.assign(job, data);
-                filterAndRenderJobs();
-                callApi('update_repair', { id, data }, 'handleGenericResponse');
-            }
-        }
-
-        function saveSparePart(data) {
-            callApi('save_spare_part', { data }, 'handleSavePart');
-            window.handleSavePart = res => {
-                if (res.status === 'success') { fetchSpareParts(); showToast('บันทึกอะไหล่สำเร็จ'); resetSparePartForm(); }
-                document.getElementById('handleSavePart')?.remove();
-            };
-        }
-
-        function deleteNote(note) {
-            callApi('delete_note', { note }, 'handleDeleteNote');
-            window.handleDeleteNote = res => { if (res.status === 'success') { fetchNotes(); showToast('ลบหมายเหตุสำเร็จ'); } document.getElementById('handleDeleteNote')?.remove(); };
-        }
-
-        function saveNote(note) {
-            callApi('save_note', { note }, 'handleSaveNote');
-            window.handleSaveNote = res => { if (res.status === 'success') { fetchNotes(); showToast('บันทึกหมายเหตุสำเร็จ'); newNoteInputModal.value = ''; } document.getElementById('handleSaveNote')?.remove(); };
-        }
-
-        // --- INITIALIZATION & EVENTS ---
-        window.onload = () => {
-            // ตั้งค่าเป้าหมายกำไรเริ่มต้นเป็น 2800 ใน UI
-            profitGoalInput.value = localStorage.getItem('profitGoal') || 2800;
-
-            if (localStorage.getItem('isLoggedIn') === 'true') { loginContainer.classList.add('hidden'); mainAppContainer.classList.remove('hidden'); fetchAllData(); }
-            
-            loginForm.onsubmit = (e) => {
-                e.preventDefault();
-                if (e.target.password.value === '9989') {
-                    localStorage.setItem('isLoggedIn', 'true');
-                    loginContainer.classList.add('hidden'); mainAppContainer.classList.remove('hidden');
-                    fetchAllData();
-                } else loginError.classList.remove('hidden');
-            };
-
-            historyMonthSelect.onchange = filterAndRenderJobs;
-            historyYearSelect.onchange = filterAndRenderJobs;
-            chartMonthSelect.onchange = updateHolidayAndChart;
-            chartYearSelect.onchange = updateHolidayAndChart;
-            
-            checkAllJobs.onchange = (e) => {
-                const checked = e.target.checked;
-                const rows = Array.from(jobsList.querySelectorAll('tr[data-id]'));
-                const ids = rows.map(r => r.dataset.id);
-                ids.forEach(id => {
-                    const job = allJobs.find(j => j.id === id);
-                    if (job) job.isChecked = checked;
-                });
-                filterAndRenderJobs();
-                updateAllCheckStatus(checked);
-            };
-
-            repairForm.onsubmit = (e) => {
-                e.preventDefault();
-                const d = `${dateYearSelect.value}-${dateMonthSelect.value}-${dateDaySelect.value}`;
-                const data = { 
-                    customerName: customerNameInput.value, device: deviceSelect.value, 
-                    revenue: revenueSelect.value === 'number' ? parseFloat(revenueInput.value) || 0 : revenueSelect.value,
-                    cost: costSelect.value === 'number' ? parseFloat(costInput.value) || 0 : costSelect.value,
-                    date: d
-                };
-                if (repairForm.repairId.value) updateJob(repairForm.repairId.value, data); else saveJob(data);
-                repairForm.reset();
-            };
-
-            revenueSelect.onchange = (e) => revenueInput.style.display = e.target.value === 'number' ? 'block' : 'none';
-            costSelect.onchange = (e) => costInput.style.display = e.target.value === 'number' ? 'block' : 'none';
-            
-            showDailyChartBtn.onclick = () => { currentChartView = 'daily'; showDailyChartBtn.classList.add('active'); showMonthlyChartBtn.classList.remove('active'); renderChart(); };
-            showMonthlyChartBtn.onclick = () => { currentChartView = 'monthly'; showMonthlyChartBtn.classList.add('active'); showDailyChartBtn.classList.remove('active'); renderChart(); };
-            
-            profitGoalSetBtn.onclick = () => { localStorage.setItem('profitGoal', profitGoalInput.value); renderChart(); showToast('บันทึกเป้าหมายแล้ว'); };
-            
-            manageHolidaysBtn.onclick = () => {
-                const m = chartMonthSelect.value, y = chartYearSelect.value; if(!m || !y) return;
-                const days = new Date(y, m, 0).getDate(), start = new Date(y, m-1, 1).getDay();
-                holidaysCalendarHeader.innerHTML = ['อา','จ','อ','พ','พฤ','ศ','ส'].map(d => `<div>${d}</div>`).join('');
-                holidaysGrid.innerHTML = '';
-                for(let i=0; i<start; i++) holidaysGrid.appendChild(document.createElement('div'));
-                for(let i=1; i<=days; i++) {
-                    const btn = document.createElement('button'); btn.textContent = i;
-                    btn.className = `p-2 rounded-full w-10 h-10 ${holidaysForCurrentMonth.includes(i) ? 'bg-blue-500 text-white font-bold' : 'bg-gray-100 hover:bg-gray-200'}`;
-                    btn.onclick = () => {
-                        const idx = holidaysForCurrentMonth.indexOf(i);
-                        if(idx > -1) holidaysForCurrentMonth.splice(idx, 1); else holidaysForCurrentMonth.push(i);
-                        saveHoliday(y, m, holidaysForCurrentMonth);
-                        renderChart(); manageHolidaysBtn.click();
-                    };
-                    holidaysGrid.appendChild(btn);
-                }
-                holidaysModal.style.display = 'flex';
-            };
-
-            refreshChartBtn.onclick = fetchJobs;
-            stickyPartsBtn.onclick = () => sparePartsModal.style.display = 'flex';
-            sparePartSearch.oninput = renderSpareParts;
-            toggleAddPartBtn.onclick = () => addPartFormContainer.classList.toggle('hidden');
-            sparePartForm.onsubmit = (e) => {
-                e.preventDefault();
-                saveSparePart({ id: sparePartIdInput.value || null, partName: sparePartNameInput.value.trim(), price: parseFloat(sparePartPriceInput.value) || 0 });
-            };
-
-            document.querySelectorAll('[id^="close-"], #confirm-cancel, #close-note-jobs-modal-btn').forEach(btn => btn.onclick = () => {
-                btn.closest('.fixed').style.display = 'none';
-            });
-            
-            summaryContainer.onclick = (e) => {
-                const item = e.target.closest('.note-summary-item');
-                if (item) {
-                    const note = item.dataset.note;
-                    const monthKey = item.dataset.monthkey;
-                    showNoteJobsModal(note, monthKey);
-                }
-            };
-            
-            manageNotesBtn.onclick = () => manageNotesModal.style.display = 'flex';
-            saveNoteButton.onclick = () => { if (newNoteInputModal.value.trim()) saveNote(newNoteInputModal.value.trim()); };
-            confirmDeleteBtn.onclick = () => { if(deleteCallback) deleteCallback(); confirmModal.style.display = 'none'; };
-        };
-
-        function updateCheckAllState() {
-            const cbs = Array.from(jobsList.querySelectorAll('.job-cb'));
-            if (!cbs.length) { checkAllJobs.checked = false; return; }
-            const checked = cbs.filter(c => c.checked).length;
-            checkAllJobs.checked = checked === cbs.length;
-            checkAllJobs.indeterminate = checked > 0 && checked < cbs.length;
-        }
-
-        function handleCellClick(e) {
-            const cell = e.target.closest('td.inline-editable'); if (!cell || cell.querySelector('input, select')) return;
-            const field = cell.dataset.field, jobId = cell.closest('tr').dataset.id, job = allJobs.find(j => j.id === jobId);
-            const oldVal = job[field], oldHTML = cell.innerHTML;
-            cell.style.width = cell.offsetWidth + 'px';
-            let editor;
-            if (field === 'device') {
-                editor = document.createElement('select'); editor.className = 'w-full p-1 text-sm border-blue-400 rounded';
-                Array.from(deviceSelect.options).forEach(o => editor.add(new Option(o.text, o.value))); editor.value = oldVal;
-            } else {
-                editor = document.createElement('input'); editor.type = 'text'; editor.className = 'w-full p-1 text-sm border-blue-400 rounded';
-                editor.value = typeof oldVal === 'number' ? oldVal : (oldVal === 'pending' ? '' : oldVal);
-            }
-            cell.innerHTML = ''; cell.appendChild(editor); editor.focus();
-            const finish = (v) => { if(v !== oldVal) updateJob(jobId, { [field]: v }); else cell.innerHTML = oldHTML; cell.style.width = ''; };
-            editor.onblur = (ev) => {
-                let v = ev.target.value.trim();
-                if (field === 'revenue' || field === 'cost') {
-                    if (v === '') finish('pending'); else if (!isNaN(v)) finish(parseFloat(v)); else finish(oldVal);
-                } else finish(v);
-            };
-            editor.onkeydown = (ev) => { if(ev.key === 'Enter') editor.blur(); if(ev.key === 'Escape') { editor.onblur = null; cell.innerHTML = oldHTML; cell.style.width = ''; } };
-        }
-        jobsList.addEventListener('click', handleCellClick);
         
-        function resetSparePartForm() { sparePartForm.reset(); sparePartIdInput.value = ''; sparePartSubmitBtn.textContent = 'เพิ่ม'; sparePartCancelBtn.classList.add('hidden'); }
-        function editPart(id) {
-            const part = allSpareParts.find(p => p.id === id);
+        function renderNotesSelect(notes) {
+            const val = deviceSelect.value;
+            deviceSelect.innerHTML = '<option value="งานหน้าร้าน">งานหน้าร้าน</option>' + [...new Set(notes.map(n => n.note))].sort().filter(n => n !== 'งานหน้าร้าน').map(n => `<option value="${n}">${n}</option>`).join('');
+            deviceSelect.value = val || 'งานหน้าร้าน';
+        }
+        function renderNotesManagementList(notes) {
+            notesListContainer.innerHTML = notes.map(note => `<li class="flex items-center justify-between p-2 rounded-md bg-white border"><span>${note.note}</span><button class="px-2 py-1 bg-red-500 text-white rounded-md text-xs hover:bg-red-600 ${note.note === 'งานหน้าร้าน' ? 'opacity-50 cursor-not-allowed':''}" ${note.note === 'งานหน้าร้าน' ? 'disabled':''} onclick="deleteNote('${note.note}')">ลบ</button></li>`).join('');
+        }
+        
+        function renderSparePartsList() {
+            const searchTerm = sparePartSearch.value.toLowerCase().trim();
+            let filteredParts = [];
+
+            if (searchTerm === '') {
+                 sparePartsListContainer.innerHTML = '<li><p class="text-center text-gray-500 p-4">กรุณาพิมพ์เพื่อค้นหาอะไหล่</p></li>';
+                 return;
+            } else {
+                const searchKeywords = searchTerm.split(/\s+/).filter(k => k);
+                if (searchKeywords.length > 0) {
+                    filteredParts = allSpareParts.filter(part => {
+                        const partNameLower = part.partName.toLowerCase();
+                        return searchKeywords.every(keyword => partNameLower.includes(keyword));
+                    });
+                }
+            }
+            
+            if (filteredParts.length === 0) {
+                sparePartsListContainer.innerHTML = '<li><p class="text-center text-gray-500 p-4">ไม่พบอะไหล่ที่ค้นหา</p></li>';
+                return;
+            }
+
+            sparePartsListContainer.innerHTML = filteredParts.sort((a,b) => a.partName.localeCompare(b.partName)).map(part => {
+                const updatedDate = new Date(part.lastUpdated).toLocaleDateString('th-TH', { year: '2-digit', month: 'short', day: 'numeric', hour:'2-digit', minute:'2-digit' });
+                return `<li class="flex items-center justify-between p-3 bg-gray-50 rounded-md border"><div><p class="font-semibold text-gray-800">${part.partName}</p><p class="text-sm text-gray-500">อัปเดต: ${updatedDate}</p></div><div class="flex items-center space-x-4"><p class="text-lg font-semibold text-blue-600">${Number(part.price).toLocaleString()} บาท</p><button class="text-yellow-500 hover:text-yellow-700" onclick="editSparePart('${part.id}')">แก้ไข</button><button class="text-red-500 hover:text-red-700" onclick="showDeleteModal(event, 'part', '${part.id}')">ลบ</button></div></li>`;
+            }).join('');
+        }
+        
+        function editSparePart(partId) {
+            const part = allSpareParts.find(p => p.id === partId);
             if (part) {
                 addPartFormContainer.classList.remove('hidden');
-                sparePartIdInput.value = part.id; sparePartNameInput.value = part.partName; sparePartPriceInput.value = part.price;
-                sparePartSubmitBtn.textContent = 'อัปเดต'; sparePartCancelBtn.classList.remove('hidden');
+                sparePartIdInput.value = part.id;
+                sparePartNameInput.value = part.partName;
+                sparePartPriceInput.value = part.price;
+                sparePartSubmitBtn.textContent = 'อัปเดต';
+                sparePartCancelBtn.classList.remove('hidden');
+                sparePartNameInput.focus();
             }
         }
         
-        function confirmDeletePart(id) {
-            deleteCallback = () => { callApi('delete_spare_part', { id }, 'handleGenericResponse'); showToast('ลบอะไหล่สำเร็จ'); fetchSpareParts(); };
-            confirmModal.style.display = 'flex';
+        function resetSparePartForm(hideForm = true){
+            sparePartForm.reset();
+            sparePartIdInput.value = '';
+            sparePartSubmitBtn.textContent = 'เพิ่มอะไหล่';
+            sparePartCancelBtn.classList.add('hidden');
+            if(hideForm){
+                addPartFormContainer.classList.add('hidden');
+            }
+        }
+
+        function renderJobSearchResults() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+
+            if (searchTerm === '') {
+                jobSearchListContainer.innerHTML = '';
+                return;
+            }
+
+            const searchKeywords = searchTerm.split(/\s+/).filter(k => k);
+            let filteredJobs = [];
+            if (searchKeywords.length > 0) {
+                 filteredJobs = allJobs.filter(job => {
+                    const jobNameLower = job.customerName.toLowerCase();
+                    return searchKeywords.every(keyword => jobNameLower.includes(keyword));
+                });
+            }
+
+            if (filteredJobs.length === 0) {
+                jobSearchListContainer.innerHTML = '<li><p class="text-center text-gray-500 p-2">ไม่พบงานซ่อมที่ค้นหา</p></li>';
+                return;
+            }
+
+            jobSearchListContainer.innerHTML = filteredJobs.sort((a,b) => new Date(b.date) - new Date(a.date)).map(job => {
+                 const dateObj = new Date(job.date);
+                 const dateStr = dateObj.toLocaleDateString('th-TH', { year: '2-digit', month: 'short', day: 'numeric'});
+                 
+                 let revenueHTML = '';
+                 if (typeof job.revenue === 'number') {
+                     if (job.revenue < 0) {
+                          const refundAmount = Math.abs(job.revenue).toLocaleString();
+                          revenueHTML = `<span class="text-sm font-medium text-red-600">คืนเงิน(${refundAmount})</span>`;
+                     } else {
+                          revenueHTML = `<span class="text-sm font-medium text-green-600">${job.revenue.toLocaleString()} บาท</span>`;
+                     }
+                 } else if (job.revenue === 'claim') {
+                     revenueHTML = `<span class="text-sm font-medium text-red-600">งานเคลม</span>`;
+                 } else if (job.revenue === 'refund') {
+                      revenueHTML = `<span class="text-sm font-medium text-red-600">คืนเงิน</span>`;
+                 } else { // pending
+                     revenueHTML = `<span class="text-sm font-medium text-yellow-500">รอดำเนินการ</span>`;
+                 }
+
+                 return `<li class="job-search-item flex items-center justify-between p-3 bg-gray-50 rounded-md border cursor-pointer hover:bg-blue-100" data-job-id="${job.id}">
+                             <div>
+                                 <p class="font-semibold text-gray-800">${job.customerName}</p>
+                                 <p class="text-sm text-gray-500">${job.device} - ${dateStr}</p>
+                             </div>
+                             <div>
+                                 ${revenueHTML}
+                             </div>
+                         </li>`;
+            }).join('');
+        }
+
+        function openHolidaysModal() {
+            const selectedMonth = chartMonthSelect.value;
+            const selectedYear = chartYearSelect.value;
+
+            if (!selectedMonth || !selectedYear) {
+                showToast('กรุณาเลือกเดือนและปีก่อน', 'error');
+                return;
+            }
+
+            holidaysModalTitle.textContent = `จัดการวันหยุด - ${thaiMonths[selectedMonth-1]} ${parseInt(selectedYear)+543}`;
+            const holidays = holidaysForCurrentMonth;
+            const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+            const startDay = new Date(selectedYear, selectedMonth - 1, 1).getDay(); // 0 = Sunday, 1 = Monday, ...
+
+            holidaysGrid.innerHTML = '';
+            holidaysCalendarHeader.innerHTML = '';
+
+            const dayNames = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+            dayNames.forEach(name => {
+                const dayHeader = document.createElement('div');
+                dayHeader.textContent = name;
+                holidaysCalendarHeader.appendChild(dayHeader);
+            });
+
+            // Add empty cells for the days before the 1st of the month
+            for (let i = 0; i < startDay; i++) {
+                holidaysGrid.appendChild(document.createElement('div'));
+            }
+
+            for (let i = 1; i <= daysInMonth; i++) {
+                const day = i;
+                const button = document.createElement('button');
+                button.textContent = day;
+                button.className = 'p-2 rounded-full w-10 h-10 mx-auto flex items-center justify-center transition-colors';
+                if (holidays.includes(day)) {
+                    button.classList.add('bg-blue-500', 'text-white', 'font-bold');
+                } else {
+                    button.classList.add('bg-gray-200', 'hover:bg-gray-300');
+                }
+                button.onclick = () => {
+                    toggleHoliday(selectedYear, selectedMonth, day);
+                    openHolidaysModal(); 
+                };
+                holidaysGrid.appendChild(button);
+            }
+            holidaysModal.style.display = 'flex';
+        }
+
+
+        // --- EVENT LISTENERS & INITIALIZATION ---
+        function initializeApp() {
+            populateDateDropdowns();
+            
+            const savedProfitGoal = localStorage.getItem('profitGoal');
+            profitGoalInput.value = savedProfitGoal || 3000;
+            
+            fetchAllData();
+            jobsList.addEventListener('click', handleCellClick);
+            summaryContainer.addEventListener('click', handleNoteSummaryClick);
+            stickyPartsBtn.addEventListener('click', () => { sparePartsModal.style.display = 'flex'; });
+            
+            sparePartsModal.addEventListener('click', (e) => {
+                const jobItem = e.target.closest('.job-search-item');
+                if(jobItem) {
+                    const jobId = jobItem.dataset.jobId;
+                    editJob(jobId);
+                    closeSparePartsModalBtn.click();
+                }
+            });
+
+
+            revenueSelect.addEventListener('change', (e) => {
+                revenueInput.style.display = e.target.value === 'number' ? 'block' : 'none';
+                if (e.target.value === 'number') revenueInput.focus();
+            });
+            costSelect.addEventListener('change', (e) => {
+                costInput.style.display = e.target.value === 'number' ? 'block' : 'none';
+                if (e.target.value === 'number') costInput.focus();
+            });
+            
+            sparePartSearch.addEventListener('input', renderSparePartsList);
+            toggleAddPartBtn.addEventListener('click', () => {
+                addPartFormContainer.classList.toggle('hidden');
+            });
+
+            if (sparePartForm) {
+                sparePartForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const partData = { id: sparePartIdInput.value || null, partName: sparePartNameInput.value.trim(), price: parseFloat(sparePartPriceInput.value) || 0 };
+                    if(!partData.partName || !partData.price) { showToast('กรุณากรอกชื่อและราคาอะไหล่', 'error'); return; }
+                    saveSparePart(partData);
+                });
+            }
+            
+            if (sparePartCancelBtn) {
+               sparePartCancelBtn.addEventListener('click', ()=>{
+                   resetSparePartForm(true);
+               });
+            }
+
+            repairForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const dateToSave = `${dateYearSelect.value}-${dateMonthSelect.value}-${dateDaySelect.value}`;
+                const jobData = { customerName: customerNameInput.value, device: deviceSelect.value, revenue: revenueSelect.value === 'number' ? parseFloat(revenueInput.value) || 0 : revenueSelect.value, cost: costSelect.value === 'number' ? parseFloat(costInput.value) || 0 : costSelect.value, date: dateToSave };
+                if (repairForm.repairId.value) {
+                    updateJob(repairForm.repairId.value, jobData);
+                    repairForm.reset();
+                } else {
+                    saveJob(jobData);
+                }
+            });
+            cancelButton.addEventListener('click', () => { repairForm.reset(); });
+            repairForm.addEventListener('reset', () => {
+                repairForm.repairId.value = '';
+                submitButton.textContent = 'บันทึก';
+                cancelButton.style.display = 'none';
+                revenueInput.style.display = 'none';
+                costInput.style.display = 'none';
+                populateDateDropdowns();
+            });
+
+            confirmDeleteBtn.addEventListener('click', () => {
+                if (deleteCallback) deleteCallback();
+                confirmModal.style.display = 'none';
+            });
+            confirmCancelBtn.addEventListener('click', () => { confirmModal.style.display = 'none'; });
+
+            manageNotesBtn.addEventListener('click', () => { manageNotesModal.style.display = 'flex'; });
+            closeManageNotesModalBtn.addEventListener('click', () => { manageNotesModal.style.display = 'none'; });
+            saveNoteButton.addEventListener('click', () => {
+                const newNote = newNoteInputModal.value.trim();
+                if (newNote) { saveNote(newNote); newNoteInputModal.value = ''; }
+                else { showToast('กรุณาพิมพ์หมายเหตุ', 'error'); }
+            });
+
+            closeNoteJobsModalBtn.addEventListener('click', () => { noteJobsModal.style.display = 'none'; });
+            closeSparePartsModalBtn.addEventListener('click', () => { sparePartsModal.style.display = 'none'; });
+
+            const handleFilterChange = (event) => {
+                const sourceElement = event.target;
+                const newValue = sourceElement.value;
+                const isChartFilter = sourceElement === chartMonthSelect || sourceElement === chartYearSelect;
+
+                if (sourceElement === historyMonthSelect) chartMonthSelect.value = newValue;
+                else if (sourceElement === chartMonthSelect) historyMonthSelect.value = newValue;
+                else if (sourceElement === historyYearSelect) chartYearSelect.value = newValue;
+                else if (sourceElement === chartYearSelect) historyYearSelect.value = newValue;
+
+                filterAndRenderJobs(!isChartFilter);
+                renderChart();
+            };
+
+            historyMonthSelect.addEventListener('change', handleFilterChange);
+            historyYearSelect.addEventListener('change', handleFilterChange);
+            chartMonthSelect.addEventListener('change', handleFilterChange);
+            chartYearSelect.addEventListener('change', handleFilterChange);
+            
+            searchInput.addEventListener('input', renderJobSearchResults);
+
+
+            profitGoalSetBtn.addEventListener('click', () => {
+                const newGoal = profitGoalInput.value;
+                if (newGoal && !isNaN(newGoal)) {
+                    localStorage.setItem('profitGoal', newGoal);
+                    showToast(`ตั้งเป้าหมายกำไรใหม่เป็น ${Number(newGoal).toLocaleString()} บาท`, 'success');
+                    renderChart();
+                } else {
+                    showToast('กรุณากรอกเป้าหมายเป็นตัวเลข', 'error');
+                }
+            });
+
+            // ** FIX: แก้ไขปุ่มติ๊กทั้งหมดให้ใช้ Batch Update แทนการ Dispatch Event **
+            checkAllJobs.addEventListener('change', (e) => {
+                const isChecked = e.target.checked;
+                const visibleJobIds = [];
+
+                document.querySelectorAll('#jobs-list tr[data-id]').forEach(row => {
+                    const jobId = row.dataset.id;
+                    const job = allJobs.find(j => j.id === jobId);
+                    
+                    if (job) {
+                        // 1. Update local state and UI immediately (โดยไม่เรียก handleJobCheckboxChange)
+                        job.isChecked = isChecked;
+                        const cb = row.querySelector('.job-checkbox');
+                        if (cb) cb.checked = isChecked;
+                        const isRefund = job.revenue === 'claim' || job.revenue === 'refund' || (typeof job.revenue === 'number' && job.revenue < 0);
+                        const isZeroRevenue = typeof job.revenue === 'number' && job.revenue === 0;
+                        if (!isRefund && !isZeroRevenue) {
+                            row.classList.toggle('bg-green-50', isChecked);
+                        }
+                        visibleJobIds.push(jobId);
+                    }
+                });
+
+                // 2. ส่งคำขอ API แบบกลุ่มเดียว
+                updateAllCheckStatus(visibleJobIds, isChecked);
+
+                // 3. อัปเดตสรุปและสถานะ checkbox หลัก
+                updateSummary();
+                updateCheckAllState();
+            });
+
+            showDailyChartBtn.addEventListener('click', () => {
+                currentChartView = 'daily';
+                chartTitle.textContent = 'กำไรรายวัน';
+                showDailyChartBtn.classList.add('active');
+                showMonthlyChartBtn.classList.remove('active');
+                chartMonthFilter.style.display = 'block';
+                profitGoalContainer.style.display = 'block';
+                manageHolidaysBtn.style.display = 'inline-flex';
+                renderChart();
+            });
+
+            showMonthlyChartBtn.addEventListener('click', () => {
+                currentChartView = 'monthly';
+                chartTitle.textContent = 'กำไรรายเดือน';
+                showMonthlyChartBtn.classList.add('active');
+                showDailyChartBtn.classList.remove('active');
+                chartMonthFilter.style.display = 'none';
+                profitGoalContainer.style.display = 'none';
+                manageHolidaysBtn.style.display = 'none';
+                renderChart();
+            });
+            
+            manageHolidaysBtn.addEventListener('click', openHolidaysModal);
+            closeHolidaysModalBtn.addEventListener('click', () => {
+                holidaysModal.style.display = 'none';
+            });
+            
+            refreshChartBtn.addEventListener('click', () => {
+                showToast('กำลังรีเฟรชข้อมูล...', 'info');
+                fetchAllData();
+            });
+
         }
         
-        window.handleGenericResponse = res => { if (res.status === 'error') showToast(res.message, 'error'); document.getElementById('handleGenericResponse')?.remove(); };
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('isLoggedIn') === 'true') {
+                loginContainer.classList.add('hidden');
+                mainAppContainer.classList.remove('hidden');
+                initializeApp();
+            }
+
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const password = e.target.password.value;
+                const isValidPassword = password === '9989';
+
+                if (isValidPassword) {
+                    localStorage.setItem('isLoggedIn', 'true');
+                    loginError.classList.add('hidden');
+                    loginContainer.classList.add('hidden');
+                    mainAppContainer.classList.remove('hidden');
+                    initializeApp();
+                } else {
+                    localStorage.removeItem('isLoggedIn');
+                    loginError.textContent = 'รหัสผ่านไม่ถูกต้อง';
+                    loginError.classList.remove('hidden');
+                }
+            });
+        });
+
+        function showDeleteModal(event, type, id) {
+            event.stopPropagation();
+            const confirmTitle = document.getElementById('confirm-title');
+            const confirmMessage = document.getElementById('confirm-message');
+            if (type === 'job') {
+                confirmTitle.textContent = 'ยืนยันการลบงานซ่อม';
+                confirmMessage.textContent = 'คุณแน่ใจหรือไม่ว่าต้องการลบรายการงานซ่อมนี้?';
+                deleteCallback = () => deleteJob(id);
+            } else if (type === 'part') {
+                confirmTitle.textContent = 'ยืนยันการลบอะไหล่';
+                confirmMessage.textContent = `คุณแน่ใจหรือไม่ว่าต้องการลบอะไหล่ชิ้นนี้?`;
+                deleteCallback = () => deleteSparePart(id);
+            }
+            confirmModal.style.display = 'flex';
+        }
+
+        function editJob(id) {
+            getRepairById(id, (data) => {
+                if(data) {
+                    repairForm.repairId.value = id;
+                    customerNameInput.value = data.customerName;
+                    deviceSelect.value = data.device;
+                    const [year, month, day] = data.date.split('-');
+                    dateYearSelect.value = year; dateMonthSelect.value = month; dateDaySelect.value = day;
+                    if (['pending', 'claim', 'refund'].includes(data.revenue)) {
+                        revenueSelect.value = data.revenue; revenueInput.style.display = 'none';
+                    } else {
+                        revenueSelect.value = 'number'; revenueInput.style.display = 'block'; revenueInput.value = data.revenue;
+                    }
+                    if (['pending', 'no_cost'].includes(data.cost)) {
+                        costSelect.value = data.cost; costInput.style.display = 'none';
+                    } else {
+                        costSelect.value = 'number'; costInput.style.display = 'block'; costInput.value = data.cost;
+                    }
+                    submitButton.textContent = 'อัปเดต';
+                    cancelButton.style.display = 'inline-flex';
+                }
+            });
+        }
+        
+        function handleCellClick(e) {
+            const cell = e.target.closest('td.inline-editable');
+            if (!cell || cell.querySelector('input') || cell.querySelector('select')) return;
+        
+            const field = cell.dataset.field;
+            const row = cell.closest('tr');
+            const jobId = row.dataset.id;
+            const job = allJobs.find(j => j.id === jobId);
+            if (!job) return;
+        
+            const originalContent = cell.innerHTML;
+            const originalValue = job[field];
+        
+            const cellWidth = cell.getBoundingClientRect().width;
+            cell.style.width = `${cellWidth}px`;
+            cell.style.padding = '0';
+        
+            let editorElement;
+        
+            if (field === 'device') {
+                const select = document.createElement('select');
+                select.className = 'w-full h-full p-2 border-2 border-blue-400 rounded focus:outline-none bg-yellow-50 text-sm';
+                Array.from(deviceSelect.options).forEach(opt => {
+                    const newOpt = new Option(opt.text, opt.value);
+                    select.add(newOpt);
+                });
+                select.value = originalValue;
+                editorElement = select;
+            } else {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'w-full h-full p-2 border-2 border-blue-400 rounded focus:outline-none bg-yellow-50 text-sm';
+                
+                if (field === 'revenue' || field === 'cost') {
+                    input.classList.add('text-center');
+                }
+
+                if ((field === 'revenue' || field === 'cost') && originalValue === 'pending') {
+                    input.value = '';
+                    input.placeholder = 'กรอกตัวเลข';
+                } else if (typeof originalValue === 'number') {
+                    input.value = originalValue;
+                } else if (originalValue === 'claim') {
+                    input.value = 'งานเคลม';
+                } else if (originalValue === 'refund') {
+                    input.value = 'คืนเงิน';
+                } else if (originalValue === 'no_cost') {
+                    input.value = '-';
+                } else {
+                    input.value = originalValue || '';
+                }
+                editorElement = input;
+            }
+
+            cell.innerHTML = '';
+            cell.appendChild(editorElement);
+            editorElement.focus();
+        
+            const cleanupAndRestore = (content) => {
+                cell.style.width = '';
+                cell.style.padding = '';
+                cell.innerHTML = content;
+            };
+
+            const saveChanges = (newValueStr) => {
+                let parsedValue;
+                const trimmedValue = newValueStr.trim();
+        
+                if (field === 'revenue' || field === 'cost') {
+                    if (trimmedValue === '') {
+                        parsedValue = 'pending';
+                    } else {
+                        const num = parseFloat(trimmedValue);
+                        if (!isNaN(num)) {
+                            parsedValue = num;
+                        } else if (trimmedValue.includes('เคลม')) {
+                            parsedValue = 'claim';
+                        } else if (trimmedValue.includes('คืน')) {
+                            parsedValue = 'refund';
+                        } else if (trimmedValue === '-' && field === 'cost') {
+                            parsedValue = 'no_cost';
+                        } else {
+                            parsedValue = 'pending';
+                        }
+                    }
+                } else {
+                    parsedValue = trimmedValue;
+                }
+                
+                if (parsedValue !== originalValue) {
+                    updateJob(jobId, { [field]: parsedValue });
+                } else {
+                    cleanupAndRestore(originalContent);
+                }
+            };
+        
+            const blurHandler = (e) => {
+                saveChanges(e.target.value);
+            };
+
+            editorElement.addEventListener('blur', blurHandler);
+            
+            editorElement.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    editorElement.blur();
+                } else if (e.key === 'Escape') {
+                    editorElement.removeEventListener('blur', blurHandler);
+                    cleanupAndRestore(originalContent);
+                }
+            });
+        }
+
+        function handleNoteSummaryClick(e) {
+            const noteItem = e.target.closest('.note-summary-item');
+            if (noteItem) {
+                const note = noteItem.dataset.note;
+                const monthKey = noteItem.dataset.monthkey;
+                showNoteJobsModal(note, monthKey);
+            }
+        }
+
+        function showJobsForDayModal(day, month, year) {
+            const dateToFilter = new Date(year, month - 1, day);
+
+            const jobsForDay = allJobs.filter(job => {
+                const jobDate = new Date(job.date);
+                return jobDate.getFullYear() === dateToFilter.getFullYear() &&
+                       jobDate.getMonth() === dateToFilter.getMonth() &&
+                       jobDate.getDate() === dateToFilter.getDate();
+            });
+            
+            jobsForDay.sort((a,b) => a.createdAt - b.createdAt);
+            
+            const title = `รายการงานซ่อมวันที่ ${dateToFilter.toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'})}`;
+            noteJobsModalTitle.textContent = title;
+            noteJobsModalList.innerHTML = '';
+
+            if (jobsForDay.length === 0) {
+                noteJobsModalList.innerHTML = `<p class="text-center text-gray-500">ไม่พบรายการงานซ่อมสำหรับวันนี้</p>`;
+            } else {
+                jobsForDay.forEach(job => {
+                    let revenueText = '';
+                     if (typeof job.revenue === 'number') {
+                        if (job.revenue < 0) {
+                            const amount = Math.abs(job.revenue).toLocaleString();
+                            revenueText = `<span class="text-red-600 font-medium">คืนเงิน(${amount})</span>`;
+                        } else {
+                            revenueText = `<span class="text-green-600">${job.revenue.toLocaleString()} บาท</span>`;
+                        }
+                    } else if (job.revenue === 'pending') {
+                        revenueText = `<span class="text-yellow-500 font-medium">รอดำเนินการ</span>`;
+                    } else if (job.revenue === 'claim') {
+                        revenueText = `<span class="text-red-600 font-medium">งานเคลม</span>`;
+                    } else if (job.revenue === 'refund') {
+                        revenueText = `<span class="text-red-600 font-medium">คืนเงิน</span>`;
+                    }
+
+                    const jobItem = document.createElement('div');
+                    jobItem.className = 'p-3 rounded-lg bg-gray-100 border border-gray-200';
+                    jobItem.innerHTML = `<p class="text-base font-semibold text-gray-900">${job.customerName} (${job.device})</p>
+                                         <div class="mt-2 text-sm">
+                                             <p class="text-gray-600">รายรับ: ${revenueText}</p>
+                                             <p class="text-gray-600">ต้นทุน: <span class="text-red-600">${typeof job.cost === 'number' ? job.cost.toLocaleString() + ' บาท' : (job.cost === 'no_cost' ? '-' : 'รอดำเนินการ')}</span></p>
+                                         </div>`;
+                    noteJobsModalList.appendChild(jobItem);
+                });
+            }
+            noteJobsModal.style.display = 'flex';
+        }
+
+        function showNoteJobsModal(note, monthKey) {
+            const selectedMonth = historyMonthSelect.value;
+            const selectedYear = historyYearSelect.value;
+
+            let jobsForNote = allJobs.filter(job => job.device === note);
+
+            if (selectedYear) {
+                jobsForNote = jobsForNote.filter(j => new Date(j.date).getFullYear() == selectedYear);
+            }
+            if (selectedMonth) {
+                jobsForNote = jobsForNote.filter(j => (new Date(j.date).getMonth() + 1) == selectedMonth);
+            }
+            
+            jobsForNote = jobsForNote.filter(job => job.isChecked);
+            jobsForNote.sort((a,b) => a.createdAt - b.createdAt);
+            
+            let title = `รายการงานซ่อมสำหรับ "${note}" (เฉพาะที่ตรวจสอบแล้ว)`;
+            if (selectedMonth && selectedYear) {
+                title += ` (${thaiMonths[parseInt(selectedMonth) - 1]} ${parseInt(selectedYear) + 543})`;
+            } else if (selectedYear) {
+                title += ` (ปี ${parseInt(selectedYear) + 543})`;
+            } else {
+                title += ` (ทั้งหมด)`;
+            }
+            noteJobsModalTitle.textContent = title;
+            noteJobsModalList.innerHTML = '';
+
+            if (jobsForNote.length === 0) {
+                noteJobsModalList.innerHTML = `<p class="text-center text-gray-500">ไม่พบรายการงานซ่อม</p>`;
+            } else {
+                jobsForNote.forEach(job => {
+                    const dateObj = new Date(job.date);
+                    const dateStr = dateObj.toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'});
+                    
+                    let revenueText = '';
+                    if (typeof job.revenue === 'number') {
+                        if (job.revenue < 0) {
+                            const amount = Math.abs(job.revenue).toLocaleString();
+                            revenueText = `<span class="text-red-600 font-medium">คืนเงิน(${amount})</span>`;
+                        } else {
+                            revenueText = `<span class="text-green-600">${job.revenue.toLocaleString()} บาท</span>`;
+                        }
+                    } else if (job.revenue === 'pending') {
+                        revenueText = `<span class="text-yellow-500 font-medium">รอดำเนินการ</span>`;
+                    } else if (job.revenue === 'claim') {
+                        revenueText = `<span class="text-red-600 font-medium">งานเคลม</span>`;
+                    } else if (job.revenue === 'refund') {
+                        revenueText = `<span class="text-red-600 font-medium">คืนเงิน</span>`;
+                    }
+
+                    const jobItem = document.createElement('div');
+                    jobItem.className = 'p-3 rounded-lg bg-gray-100 border border-gray-200';
+                    jobItem.innerHTML = `
+                        <div class="flex justify-between items-baseline">
+                             <p class="text-base font-semibold text-gray-900">${job.customerName}</p>
+                             <p class="text-sm text-gray-500">${dateStr}</p>
+                        </div>
+                         <div class="mt-2 text-sm">
+                             <p class="text-gray-600">รายรับ: ${revenueText}</p>
+                             <p class="text-gray-600">ต้นทุน: <span class="text-red-600">${typeof job.cost === 'number' ? job.cost.toLocaleString() + ' บาท' : (job.cost === 'no_cost' ? '-' : 'รอดำเนินการ')}</span></p>
+                         </div>`;
+                    noteJobsModalList.appendChild(jobItem);
+                });
+            }
+            noteJobsModal.style.display = 'flex';
+        }
     </script>
 </body>
 </html>

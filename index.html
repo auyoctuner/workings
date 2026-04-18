@@ -87,7 +87,7 @@
                 </table>
             </div>
             
-            <!-- ฟอร์มสำหรับเพิ่ม/แก้ไขงานซ่อม -->
+            <!-- ฟอร์มสำหรับเพิ่ม/แก้ไขงานซ่อม (ไม่มีรายรับและต้นทุน) -->
             <h2 class="text-2xl font-semibold mb-4 text-gray-700">เพิ่ม/แก้ไขงานซ่อม</h2>
             <form id="repair-form" class="bg-gray-50 p-4 rounded-lg shadow-inner flex flex-wrap items-end gap-2 sm:gap-4">
                 <input type="hidden" id="repair-id" name="repairId">
@@ -101,43 +101,18 @@
                     </div>
                 </div>
                 
-                <div class="flex-grow min-w-[120px]">
+                <div class="flex-grow min-w-[180px]">
                     <label for="customer-name" class="block text-xs text-gray-500">รายการ</label>
                     <input type="text" id="customer-name" required class="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
                 </div>
 
-                <div class="flex-grow min-w-[120px]">
+                <div class="flex-grow min-w-[150px]">
                     <label for="device-select" class="block text-xs text-gray-500">หมายเหตุ</label>
                     <div class="flex items-center space-x-2">
                         <select id="device-select" required class="flex-grow mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
                             <!-- Options will be populated by JavaScript -->
                         </select>
                         <button type="button" id="manage-notes-btn" class="mt-1 px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded-md hover:bg-gray-300 transition-colors">จัดการ</button>
-                    </div>
-                </div>
-                
-                <div class="flex-grow min-w-[120px]">
-                    <label for="revenue" class="block text-xs text-gray-500">รายรับ</label>
-                    <div class="flex items-center space-x-2 mt-1">
-                        <select id="revenue-select" class="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
-                            <option value="number">กรอกตัวเลข</option>
-                            <option value="pending" selected>รอดำเนินการ</option>
-                            <option value="claim">งานเคลม</option>
-                            <option value="refund">คืนเงิน</option>
-                        </select>
-                        <input type="number" id="revenue" style="display: none;" class="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
-                    </div>
-                </div>
-
-                <div class="flex-grow min-w-[100px]">
-                    <label for="cost" class="block text-xs text-gray-500">ต้นทุน</label>
-                    <div class="flex items-center space-x-2 mt-1">
-                         <select id="cost-select" class="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
-                            <option value="number">กรอกตัวเลข</option>
-                            <option value="pending" selected>รอดำเนินการ</option>
-                            <option value="no_cost">-</option>
-                        </select>
-                        <input type="number" id="cost" style="display: none;" class="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
                     </div>
                 </div>
 
@@ -355,10 +330,6 @@
         const repairForm = document.getElementById('repair-form');
         const customerNameInput = document.getElementById('customer-name');
         const deviceSelect = document.getElementById('device-select');
-        const revenueSelect = document.getElementById('revenue-select');
-        const revenueInput = document.getElementById('revenue');
-        const costSelect = document.getElementById('cost-select');
-        const costInput = document.getElementById('cost');
         const dateDaySelect = document.getElementById('repair-date-day');
         const dateMonthSelect = document.getElementById('repair-date-month');
         const dateYearSelect = document.getElementById('repair-date-year');
@@ -470,27 +441,31 @@
             };
             callApi('get_repairs', {}, 'handleRepairs');
         }
+        
         function saveJob(jobData) {
+            // กำหนดค่าเริ่มต้นให้ revenue และ cost เป็น 'pending'
+            const jobWithDefaults = {
+                ...jobData,
+                revenue: 'pending',
+                cost: 'pending'
+            };
+            
             window.handleSave = res => {
                 if (res.status === 'success') {
-                    allJobs.push({ ...jobData, id: res.id, createdAt: Date.now(), isChecked: false });
+                    allJobs.push({ ...jobWithDefaults, id: res.id, createdAt: Date.now(), isChecked: false });
                     filterAndRenderJobs();
                     showToast('บันทึกรายการสำเร็จ', 'success');
                     
-                    // Partial reset for continuous entry
+                    // Reset form
                     customerNameInput.value = '';
-                    revenueSelect.value = 'pending';
-                    revenueInput.style.display = 'none';
-                    revenueInput.value = '';
-                    costSelect.value = 'pending';
-                    costInput.style.display = 'none';
-                    costInput.value = '';
+                    deviceSelect.value = 'งานหน้าร้าน';
                     customerNameInput.focus();
                 } else { showToast(res.message, 'error'); }
                 document.getElementById('handleSave')?.remove();
             };
-            callApi('save_repair', { data: jobData }, 'handleSave');
+            callApi('save_repair', { data: jobWithDefaults }, 'handleSave');
         }
+        
         function updateJob(jobId, jobData) {
             const jobIndex = allJobs.findIndex(j => j.id === jobId);
             if (jobIndex !== -1) {
@@ -501,12 +476,14 @@
                 callApi('update_repair', { id: jobId, data: jobData }, 'handleGenericResponse');
             }
         }
+        
         function deleteJob(jobId) {
             allJobs = allJobs.filter(j => j.id !== jobId);
             filterAndRenderJobs();
             callApi('delete_repair', { id: jobId }, 'handleGenericResponse');
             showToast('ลบรายการสำเร็จ', 'success');
         }
+        
         function getRepairById(id, callback) {
             window.handleGetJob = res => {
                 if (res.status === 'success') callback(res.data);
@@ -1344,16 +1321,6 @@
                 }
             });
 
-
-            revenueSelect.addEventListener('change', (e) => {
-                revenueInput.style.display = e.target.value === 'number' ? 'block' : 'none';
-                if (e.target.value === 'number') revenueInput.focus();
-            });
-            costSelect.addEventListener('change', (e) => {
-                costInput.style.display = e.target.value === 'number' ? 'block' : 'none';
-                if (e.target.value === 'number') costInput.focus();
-            });
-            
             sparePartSearch.addEventListener('input', renderSparePartsList);
             toggleAddPartBtn.addEventListener('click', () => {
                 addPartFormContainer.classList.toggle('hidden');
@@ -1377,10 +1344,17 @@
             repairForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const dateToSave = `${dateYearSelect.value}-${dateMonthSelect.value}-${dateDaySelect.value}`;
-                const jobData = { customerName: customerNameInput.value, device: deviceSelect.value, revenue: revenueSelect.value === 'number' ? parseFloat(revenueInput.value) || 0 : revenueSelect.value, cost: costSelect.value === 'number' ? parseFloat(costInput.value) || 0 : costSelect.value, date: dateToSave };
+                const jobData = { 
+                    customerName: customerNameInput.value, 
+                    device: deviceSelect.value, 
+                    date: dateToSave 
+                };
                 if (repairForm.repairId.value) {
                     updateJob(repairForm.repairId.value, jobData);
                     repairForm.reset();
+                    repairForm.repairId.value = '';
+                    submitButton.textContent = 'บันทึก';
+                    cancelButton.style.display = 'none';
                 } else {
                     saveJob(jobData);
                 }
@@ -1390,8 +1364,6 @@
                 repairForm.repairId.value = '';
                 submitButton.textContent = 'บันทึก';
                 cancelButton.style.display = 'none';
-                revenueInput.style.display = 'none';
-                costInput.style.display = 'none';
                 populateDateDropdowns();
             });
 
@@ -1525,16 +1497,6 @@
                     deviceSelect.value = data.device;
                     const [year, month, day] = data.date.split('-');
                     dateYearSelect.value = year; dateMonthSelect.value = month; dateDaySelect.value = day;
-                    if (['pending', 'claim', 'refund'].includes(data.revenue)) {
-                        revenueSelect.value = data.revenue; revenueInput.style.display = 'none';
-                    } else {
-                        revenueSelect.value = 'number'; revenueInput.style.display = 'block'; revenueInput.value = data.revenue;
-                    }
-                    if (['pending', 'no_cost'].includes(data.cost)) {
-                        costSelect.value = data.cost; costInput.style.display = 'none';
-                    } else {
-                        costSelect.value = 'number'; costInput.style.display = 'block'; costInput.value = data.cost;
-                    }
                     submitButton.textContent = 'อัปเดต';
                     cancelButton.style.display = 'inline-flex';
                 }

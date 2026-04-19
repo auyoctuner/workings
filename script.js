@@ -404,6 +404,16 @@ function renderJobs(jobs) {
             <td class="px-6 py-4 text-sm text-center inline-editable cursor-pointer" data-field="cost">${costDisplay}</td>
         `;
     });
+    
+    // เพิ่มเส้นดำระหว่างวันที่เปลี่ยน
+    const rows = jobsList.querySelectorAll('tr');
+    for (let i = 1; i < rows.length; i++) {
+        const currentDate = rows[i].cells[0]?.innerText;
+        const prevDate = rows[i-1].cells[0]?.innerText;
+        if (currentDate !== prevDate) {
+            rows[i].style.borderTop = '2px solid black';
+        }
+    }
 }
 
 function getCurrentlyFilteredJobs() {

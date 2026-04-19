@@ -119,17 +119,17 @@ function autoCheckWhenComplete(jobId) {
     const isCostNumber = typeof job.cost === 'number';
     const bothAreNumbers = isRevenueNumber && isCostNumber;
     
-    // ถ้าทั้งคู่เป็นตัวเลข และยังไม่ได้ติ๊ก ให้ติ๊กอัตโนมัติ
     if (bothAreNumbers && !job.isChecked) {
         job.isChecked = true;
-        updateCheckStatus(jobId, true);
-        updateSummary();
+        updateCheckStatus(jobId, true, () => {
+            filterAndRenderJobs();
+        });
     }
-    // ถ้าไม่ครบ (ตัวใดตัวหนึ่งไม่ใช่ตัวเลข) และเคยติ๊กไว้ ให้ยกเลิกติ๊ก
     else if (!bothAreNumbers && job.isChecked) {
         job.isChecked = false;
-        updateCheckStatus(jobId, false);
-        updateSummary();
+        updateCheckStatus(jobId, false, () => {
+            filterAndRenderJobs();
+        });
     }
 }
 
@@ -187,6 +187,14 @@ function saveJob(jobData) {
     callApi('save_repair', { data: jobWithDefaults }, 'handleSave');
 }
 
+function updateCheckStatus(jobId, isChecked, callback) {
+    window.handleCheckUpdate = res => {
+        if (callback) callback(res);
+        document.getElementById('handleCheckUpdate')?.remove();
+    };
+    callApi('update_check_status', { data: { id: jobId, isChecked } }, 'handleCheckUpdate');
+}
+
 function updateJob(jobId, jobData) {
     const jobIndex = allJobs.findIndex(j => j.id === jobId);
     if (jobIndex !== -1) {
@@ -215,10 +223,6 @@ function getRepairById(id, callback) {
         document.getElementById('handleGetJob')?.remove();
     };
     callApi('get_repair_by_id', { id: id }, 'handleGetJob');
-}
-
-function updateCheckStatus(jobId, isChecked) {
-    callApi('update_check_status', { data: { id: jobId, isChecked } }, 'handleGenericResponse');
 }
 
 function updateAllCheckStatus(jobIds, isChecked) {
@@ -346,7 +350,7 @@ function filterAndRenderJobs(shouldMaintainScroll = true) {
 function renderJobs(jobs) {
     jobsList.innerHTML = '';
     if (!jobs || jobs.length === 0) {
-        jobsList.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">ไม่มีรายการ</td><tr>`;
+        jobsList.innerHTML = `<table><td colspan="7" class="p-4 text-center text-gray-500">ไม่มีรายการ</td><tr>`;
         updateCheckAllState();
         return;
     }
@@ -382,7 +386,7 @@ function renderJobs(jobs) {
                             </div>
                         </div>
                       </td>
-                 </tr>
+                  </tr>
             `);
         }
         const row = jobsList.insertRow();
@@ -437,7 +441,7 @@ function renderJobs(jobs) {
             <td class="px-6 py-4 text-left text-sm font-medium flex items-center space-x-4">
                 <input type="checkbox" data-id="${job.id}" class="job-checkbox h-4 w-4 text-blue-600" ${job.isChecked ? 'checked' : ''} style="display: none;">
                 <button class="ml-6 text-red-600 hover:text-red-900" style="display: none;" onclick="showDeleteModal(event, 'job', '${job.id}')">ลบ</button>
-            </td>
+             </td>
         `;
         currentDay = dateStr;
     });
@@ -469,8 +473,8 @@ function renderJobs(jobs) {
                             <span class="${profitColor} font-medium">กำไร ${profitText} บาท</span>
                         </div>
                     </div>
-                  </td>
-             </tr>
+                   </td>
+              </tr>
         `);
     }
     
@@ -490,12 +494,12 @@ function updateCheckAllState() {
 function handleJobCheckboxChange(e) {
     const isChecked = e.target.checked, jobId = e.target.dataset.id, row = e.target.closest('tr');
     const job = allJobs.find(j => j.id === jobId);
-    if (job) job.isChecked = isChecked;
-    const isRefund = job.revenue === 'claim' || job.revenue === 'refund' || (typeof job.revenue === 'number' && job.revenue < 0);
-    const isZeroRevenue = typeof job.revenue === 'number' && job.revenue === 0;
-    if (!isRefund && !isZeroRevenue) row.classList.toggle('bg-green-50', isChecked);
-    updateSummary();
-    updateCheckStatus(jobId, isChecked);
+    if (job) {
+        job.isChecked = isChecked;
+        updateCheckStatus(jobId, isChecked, () => {
+            filterAndRenderJobs();
+        });
+    }
     updateCheckAllState();
 }
 

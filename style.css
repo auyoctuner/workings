@@ -29,3 +29,8 @@ body {
     background-color: #3b82f6;
     color: white;
 }
+
+/* ทำให้วงเล็บต้นทุนอยู่บรรทัดเดียวกัน */
+#jobs-list td:nth-child(6) {
+    white-space: nowrap !important;
+}

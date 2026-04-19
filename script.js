@@ -17,7 +17,6 @@ const historyYearSelect = document.getElementById('history-year');
 const jobsList = document.getElementById('jobs-list');
 const summaryContainer = document.getElementById('summary-container');
 const jobCountSummary = document.getElementById('job-count-summary');
-const checkAllJobs = document.getElementById('check-all-jobs');
 const repairForm = document.getElementById('repair-form');
 const customerNameInput = document.getElementById('customer-name');
 const deviceSelect = document.getElementById('device-select');
@@ -110,34 +109,18 @@ window.handleGenericResponse = (result) => {
     document.getElementById('handleGenericResponse')?.remove();
 };
 
-// --- ฟังก์ชันสำหรับเช็คบ็อกซ์อัตโนมัติ (ยกเว้นที่มี pending) ---
 function autoCheckWhenComplete(jobId) {
     const job = allJobs.find(j => j.id === jobId);
     if (!job) return;
-    
-    // เงื่อนไข: ถ้ามี pending → ไม่ติ๊ก, นอกนั้นติ๊กหมด
     const hasPending = (job.revenue === 'pending' || job.cost === 'pending');
     const shouldBeChecked = !hasPending;
-    
-    // ถ้าสถานะไม่เปลี่ยน ไม่ต้องทำอะไร
     if (job.isChecked === shouldBeChecked) return;
-    
-    // อัปเดตสถานะ
     job.isChecked = shouldBeChecked;
-    
-    // ส่ง API อัปเดต
     updateCheckStatus(jobId, shouldBeChecked);
-    
-    // อัปเดต UI ทันที
     const row = document.querySelector(`#jobs-list tr[data-id="${jobId}"]`);
     if (row) {
-        const checkbox = row.querySelector('.job-checkbox');
-        if (checkbox) checkbox.checked = shouldBeChecked;
-        
-        // อัปเดตสีพื้นหลัง (เฉพาะที่ไม่ใช่งานเคลม/คืนเงิน/0)
         const isRefund = job.revenue === 'claim' || job.revenue === 'refund' || (typeof job.revenue === 'number' && job.revenue < 0);
         const isZeroRevenue = typeof job.revenue === 'number' && job.revenue === 0;
-        
         if (!isRefund && !isZeroRevenue) {
             if (shouldBeChecked) {
                 row.classList.add('bg-green-50');
@@ -146,8 +129,6 @@ function autoCheckWhenComplete(jobId) {
             }
         }
     }
-    
-    // อัปเดตสรุป
     updateSummary();
 }
 
@@ -166,23 +147,15 @@ function fetchJobs() {
             populateChartFilterDropdowns();
             filterAndRenderJobs(); 
             renderChart();
-            
-            // ตรวจสอบและอัปเดต UI สำหรับงานที่ควรถูกติ๊ก (ไม่มี pending)
             setTimeout(() => {
                 allJobs.forEach(job => {
                     const hasPending = (job.revenue === 'pending' || job.cost === 'pending');
                     const shouldBeChecked = !hasPending;
-                    
                     if (shouldBeChecked && !job.isChecked) {
                         job.isChecked = true;
                         updateCheckStatus(job.id, true);
-                        
                         const row = document.querySelector(`#jobs-list tr[data-id="${job.id}"]`);
-                        if (row) {
-                            const checkbox = row.querySelector('.job-checkbox');
-                            if (checkbox) checkbox.checked = true;
-                            row.classList.add('bg-green-50');
-                        }
+                        if (row) row.classList.add('bg-green-50');
                     }
                 });
                 updateSummary();
@@ -200,7 +173,6 @@ function saveJob(jobData) {
         revenue: 'pending',
         cost: 'pending'
     };
-    
     window.handleSave = res => {
         if (res.status === 'success') {
             allJobs.push({ ...jobWithDefaults, id: res.id, createdAt: Date.now(), isChecked: false });
@@ -251,12 +223,6 @@ function getRepairById(id, callback) {
         document.getElementById('handleGetJob')?.remove();
     };
     callApi('get_repair_by_id', { id: id }, 'handleGetJob');
-}
-
-function updateAllCheckStatus(jobIds, isChecked) {
-    if (jobIds.length > 0) {
-        callApi('update_all_check_status', { ids: jobIds, isChecked: isChecked }, 'handleGenericResponse');
-    }
 }
 
 function fetchNotes() {
@@ -378,20 +344,11 @@ function filterAndRenderJobs(shouldMaintainScroll = true) {
 function renderJobs(jobs) {
     jobsList.innerHTML = '';
     if (!jobs || jobs.length === 0) {
-        jobsList.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">ไม่มีรายการ</td></tr>`;
-        updateCheckAllState();
+        jobsList.innerHTML = `<table><td colspan="6" class="p-4 text-center text-gray-500">ไม่มีรายการ</td></tr>`;
         return;
     }
-    let currentDay = null;
     jobs.forEach(job => {
         let dateObj = new Date(job.date);
-        const dateStr = dateObj.toISOString().split('T')[0];
-        
-        // เส้นแบ่งวัน (สีดำ หนา 4px) เมื่อเปลี่ยนวัน - ใช้ colspan=6
-        if (dateStr !== currentDay && currentDay !== null) {
-            jobsList.insertAdjacentHTML('beforeend', `<tr><td colspan="6" style="border-top: 4px solid black; padding: 8px 0;">穷穷</tr>`);
-        }
-        
         const row = jobsList.insertRow();
         row.dataset.id = job.id;
         const isRefund = job.revenue === 'claim' || job.revenue === 'refund' || (typeof job.revenue === 'number' && job.revenue < 0);
@@ -418,7 +375,6 @@ function renderJobs(jobs) {
             revenueHTML = `<span class="text-yellow-500 font-medium">รอดำเนินการ</span>`;
         }
 
-        // แสดงต้นทุน + วงเล็บเปอร์เซ็นต์
         let costDisplay = '';
         if (typeof job.cost === 'number') {
             let percentText = '';
@@ -433,7 +389,6 @@ function renderJobs(jobs) {
             costDisplay = `<span class="text-yellow-500 font-medium">รอดำเนินการ</span>`;
         }
         
-        // ซ่อน checkbox (style="display: none;") แต่ปุ่มลบแสดง
         row.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${dateObj.toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'})}</td>
             <td class="px-6 py-4 text-sm text-gray-500">${job.item_no}</td>
@@ -442,32 +397,7 @@ function renderJobs(jobs) {
             <td class="px-6 py-4 text-sm text-center inline-editable cursor-pointer" data-field="revenue">${revenueHTML}</td>
             <td class="px-6 py-4 text-sm text-center inline-editable cursor-pointer" data-field="cost">${costDisplay}</td>
         `;
-        currentDay = dateStr;
     });
-    
-    document.querySelectorAll('.job-checkbox').forEach(cb => cb.addEventListener('change', handleJobCheckboxChange));
-    updateCheckAllState();
-}
-
-function updateCheckAllState() {
-    const checkboxes = document.querySelectorAll('#jobs-list .job-checkbox');
-    const total = checkboxes.length;
-    if (total === 0) { checkAllJobs.checked = false; checkAllJobs.indeterminate = false; return; }
-    const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
-    checkAllJobs.checked = checkedCount === total;
-    checkAllJobs.indeterminate = checkedCount > 0 && checkedCount < total;
-}
-
-function handleJobCheckboxChange(e) {
-    const isChecked = e.target.checked, jobId = e.target.dataset.id, row = e.target.closest('tr');
-    const job = allJobs.find(j => j.id === jobId);
-    if (job) {
-        job.isChecked = isChecked;
-        updateCheckStatus(jobId, isChecked, () => {
-            filterAndRenderJobs();
-        });
-    }
-    updateCheckAllState();
 }
 
 function getCurrentlyFilteredJobs() {
@@ -1124,28 +1054,6 @@ function initializeApp() {
         } else {
             showToast('กรุณากรอกเป้าหมายเป็นตัวเลข', 'error');
         }
-    });
-    checkAllJobs.addEventListener('change', (e) => {
-        const isChecked = e.target.checked;
-        const visibleJobIds = [];
-        document.querySelectorAll('#jobs-list tr[data-id]').forEach(row => {
-            const jobId = row.dataset.id;
-            const job = allJobs.find(j => j.id === jobId);
-            if (job) {
-                job.isChecked = isChecked;
-                const cb = row.querySelector('.job-checkbox');
-                if (cb) cb.checked = isChecked;
-                const isRefund = job.revenue === 'claim' || job.revenue === 'refund' || (typeof job.revenue === 'number' && job.revenue < 0);
-                const isZeroRevenue = typeof job.revenue === 'number' && job.revenue === 0;
-                if (!isRefund && !isZeroRevenue) {
-                    row.classList.toggle('bg-green-50', isChecked);
-                }
-                visibleJobIds.push(jobId);
-            }
-        });
-        updateAllCheckStatus(visibleJobIds, isChecked);
-        updateSummary();
-        updateCheckAllState();
     });
     showDailyChartBtn.addEventListener('click', () => {
         currentChartView = 'daily';

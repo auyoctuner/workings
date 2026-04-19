@@ -334,7 +334,7 @@ function renderJobs(jobs) {
         }
         row.className = rowClass;
         
-        let revenueHTML = '', costHTML = '';
+        let revenueHTML = '';
         if (job.revenue === 'claim') {
             revenueHTML = `<span class="text-red-600 font-medium">งานเคลม</span>`;
         } else if (job.revenue === 'refund' || (typeof job.revenue === 'number' && job.revenue < 0)) {
@@ -345,11 +345,34 @@ function renderJobs(jobs) {
         } else {
             revenueHTML = `<span class="text-yellow-500 font-medium">รอดำเนินการ</span>`;
         }
-        if (typeof job.cost === 'number') costHTML = `<span class="text-red-600">${job.cost.toLocaleString()}</span>`;
-        else if (job.cost === 'no_cost') costHTML = `<span class="text-gray-500">-</span>`;
-        else costHTML = `<span class="text-yellow-500 font-medium">รอดำเนินการ</span>`;
+
+        // แสดงต้นทุน + วงเล็บเปอร์เซ็นต์
+        let costDisplay = '';
+        if (typeof job.cost === 'number') {
+            let percentText = '';
+            if (typeof job.revenue === 'number' && job.revenue > 0) {
+                const percent = (job.cost / job.revenue) * 100;
+                percentText = ` (${percent.toFixed(1)}%)`;
+            }
+            costDisplay = `<span class="text-red-600">${job.cost.toLocaleString()}${percentText}</span>`;
+        } else if (job.cost === 'no_cost') {
+            costDisplay = `<span class="text-gray-500">-</span>`;
+        } else {
+            costDisplay = `<span class="text-yellow-500 font-medium">รอดำเนินการ</span>`;
+        }
         
-        row.innerHTML = `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${dateObj.toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'})}</td><td class="px-6 py-4 text-sm text-gray-500">${job.item_no}</td><td class="px-6 py-4 text-sm font-medium text-gray-900 inline-editable cursor-pointer" data-field="customerName">${job.customerName}</td><td class="px-6 py-4 text-sm text-gray-500 inline-editable cursor-pointer" data-field="device">${job.device}</td><td class="px-6 py-4 text-sm text-center inline-editable cursor-pointer" data-field="revenue">${revenueHTML}</td><td class="px-6 py-4 text-sm text-center inline-editable cursor-pointer" data-field="cost">${costHTML}</td><td class="px-6 py-4 text-left text-sm font-medium flex items-center space-x-4"><input type="checkbox" data-id="${job.id}" class="job-checkbox h-4 w-4 text-blue-600" ${job.isChecked ? 'checked' : ''}><button class="ml-6 text-red-600 hover:text-red-900" onclick="showDeleteModal(event, 'job', '${job.id}')">ลบ</button></td>`;
+        row.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${dateObj.toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'})}</td>
+            <td class="px-6 py-4 text-sm text-gray-500">${job.item_no}</td>
+            <td class="px-6 py-4 text-sm font-medium text-gray-900 inline-editable cursor-pointer" data-field="customerName">${job.customerName}</td>
+            <td class="px-6 py-4 text-sm text-gray-500 inline-editable cursor-pointer" data-field="device">${job.device}</td>
+            <td class="px-6 py-4 text-sm text-center inline-editable cursor-pointer" data-field="revenue">${revenueHTML}</td>
+            <td class="px-6 py-4 text-sm text-center inline-editable cursor-pointer" data-field="cost">${costDisplay}</td>
+            <td class="px-6 py-4 text-left text-sm font-medium flex items-center space-x-4">
+                <input type="checkbox" data-id="${job.id}" class="job-checkbox h-4 w-4 text-blue-600" ${job.isChecked ? 'checked' : ''}>
+                <button class="ml-6 text-red-600 hover:text-red-900" onclick="showDeleteModal(event, 'job', '${job.id}')">ลบ</button>
+            </td>
+        `;
         currentDay = dateStr;
     });
     document.querySelectorAll('.job-checkbox').forEach(cb => cb.addEventListener('change', handleJobCheckboxChange));
@@ -446,15 +469,8 @@ function renderSummary(jobs) {
         const ns = summary.notes[note];
         const profit = ns.revenue - ns.cost;
         const countText = ns.refundCount > 0 ? `(${ns.count} รายการ, คืนเงิน ${ns.refundCount})` : `(${ns.count} รายการ)`;
-        // คำนวณเปอร์เซ็นต์กำไร (เฉพาะกรณีที่มีรายรับ)
-        const profitPercent = ns.revenue > 0 ? ((profit / ns.revenue) * 100).toFixed(1) : 0;
-        const profitText = profit >= 0 ? `กำไร: ${profit.toLocaleString()} บาท (${profitPercent}%)` : `กำไร: ${profit.toLocaleString()} บาท`;
-        return `<li class="note-summary-item flex flex-col sm:flex-row justify-between items-start sm:items-center p-2 rounded-md bg-white border hover:shadow-md hover:-translate-y-1 transform transition-all duration-200 cursor-pointer" data-note="${note}"><span class="font-semibold text-lg text-gray-900">${note}</span><div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm mt-1 sm:mt-0"><span class="text-gray-600">${countText}</span><span class="text-green-600">รับ: ${ns.revenue.toLocaleString()}</span><span class="text-red-600">ทุน: ${ns.cost.toLocaleString()}</span><span class="${profit >= 0 ? 'text-blue-600':'text-red-600'}">${profitText}</span></div></li>`;
+        return `<li class="note-summary-item flex flex-col sm:flex-row justify-between items-start sm:items-center p-2 rounded-md bg-white border hover:shadow-md hover:-translate-y-1 transform transition-all duration-200 cursor-pointer" data-note="${note}"><span class="font-semibold text-lg text-gray-900">${note}</span><div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm mt-1 sm:mt-0"><span class="text-gray-600">${countText}</span><span class="text-green-600">รับ: ${ns.revenue.toLocaleString()}</span><span class="text-red-600">ทุน: ${ns.cost.toLocaleString()}</span><span class="${profit >= 0 ? 'text-blue-600':'text-red-600'}">กำไร: ${profit.toLocaleString()}</span></div></li>`;
     }).join('');
-    
-    // คำนวณเปอร์เซ็นต์กำไรรวม
-    const totalProfitPercent = summary.totalRevenue > 0 ? ((totalProfit / summary.totalRevenue) * 100).toFixed(1) : 0;
-    const totalProfitText = totalProfit >= 0 ? `กำไร: ${totalProfit.toLocaleString()} บาท (${totalProfitPercent}%)` : `กำไร: ${totalProfit.toLocaleString()} บาท`;
     
     summaryDiv.innerHTML = `
         <h3 class="text-xl font-bold mb-2 text-gray-800">${title}</h3>
@@ -464,7 +480,7 @@ function renderSummary(jobs) {
                 <span>ทุนรวม: ${summary.totalCost.toLocaleString()}</span>
                 <span class="text-sm font-normal">(${costPercentage}%)</span>
             </div>
-            <div class="p-3 rounded-lg ${totalProfit >= 0 ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'} flex flex-col justify-center"><span>${totalProfitText}</span></div>
+            <div class="p-3 rounded-lg ${totalProfit >= 0 ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'} flex flex-col justify-center"><span>กำไร: ${totalProfit.toLocaleString()}</span></div>
         </div>
         <h4 class="text-base font-semibold mb-2 text-gray-700">สรุปตามหมายเหตุ:</h4>
         <ul class="space-y-2">${notesHtml}</ul>

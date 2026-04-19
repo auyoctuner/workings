@@ -30,7 +30,19 @@ body {
     color: white;
 }
 
-/* ทำให้วงเล็บต้นทุนอยู่บรรทัดเดียวกัน */
+/* ===== แก้ไขวงเล็บต้นทุนให้อยู่บรรทัดเดียวกัน ===== */
+/* ทำให้ตารางเลื่อนแนวนอนได้ */
+.overflow-x-auto {
+    overflow-x: auto !important;
+}
+
+/* บังคับไม่ให้ตัดบรรทัดในทุกช่องของตาราง */
+#jobs-list td {
+    white-space: nowrap !important;
+}
+
+/* กำหนดความกว้างขั้นต่ำให้ช่องต้นทุน */
 #jobs-list td:nth-child(6) {
     white-space: nowrap !important;
+    min-width: 130px;
 }

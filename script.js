@@ -389,8 +389,14 @@ function renderJobs(jobs) {
             costDisplay = `<span class="text-yellow-500 font-medium">รอดำเนินการ</span>`;
         }
         
+        // แสดงวันที่แบบย่อ DD/MM/YY (พ.ศ. 2 หลัก)
+        const day = dateObj.getDate();
+        const month = dateObj.getMonth() + 1;
+        const yearBE = dateObj.getFullYear() + 543;
+        const shortDate = `${day}/${month}/${yearBE.toString().slice(-2)}`;
+        
         row.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${dateObj.toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'})}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${shortDate}</td>
             <td class="px-6 py-4 text-sm text-gray-500">${job.item_no}</td>
             <td class="px-6 py-4 text-sm font-medium text-gray-900 inline-editable cursor-pointer" data-field="customerName">${job.customerName}</td>
             <td class="px-6 py-4 text-sm text-gray-500 inline-editable cursor-pointer" data-field="device">${job.device}</td>

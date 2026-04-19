@@ -110,27 +110,45 @@ window.handleGenericResponse = (result) => {
     document.getElementById('handleGenericResponse')?.remove();
 };
 
-// --- ฟังก์ชันสำหรับเช็คบ็อกซ์อัตโนมัติเมื่อรายรับและต้นทุนเป็นตัวเลข ---
+// --- ฟังก์ชันสำหรับเช็คบ็อกซ์อัตโนมัติ (ยกเว้นที่มี pending) ---
 function autoCheckWhenComplete(jobId) {
     const job = allJobs.find(j => j.id === jobId);
     if (!job) return;
     
-    const isRevenueNumber = typeof job.revenue === 'number';
-    const isCostNumber = typeof job.cost === 'number';
-    const bothAreNumbers = isRevenueNumber && isCostNumber;
+    // เงื่อนไข: ถ้ามี pending → ไม่ติ๊ก, นอกนั้นติ๊กหมด
+    const hasPending = (job.revenue === 'pending' || job.cost === 'pending');
+    const shouldBeChecked = !hasPending;
     
-    if (bothAreNumbers && !job.isChecked) {
-        job.isChecked = true;
-        updateCheckStatus(jobId, true, () => {
-            filterAndRenderJobs();
-        });
+    // ถ้าสถานะไม่เปลี่ยน ไม่ต้องทำอะไร
+    if (job.isChecked === shouldBeChecked) return;
+    
+    // อัปเดตสถานะ
+    job.isChecked = shouldBeChecked;
+    
+    // ส่ง API อัปเดต
+    updateCheckStatus(jobId, shouldBeChecked);
+    
+    // อัปเดต UI ทันที
+    const row = document.querySelector(`#jobs-list tr[data-id="${jobId}"]`);
+    if (row) {
+        const checkbox = row.querySelector('.job-checkbox');
+        if (checkbox) checkbox.checked = shouldBeChecked;
+        
+        // อัปเดตสีพื้นหลัง (เฉพาะที่ไม่ใช่งานเคลม/คืนเงิน/0)
+        const isRefund = job.revenue === 'claim' || job.revenue === 'refund' || (typeof job.revenue === 'number' && job.revenue < 0);
+        const isZeroRevenue = typeof job.revenue === 'number' && job.revenue === 0;
+        
+        if (!isRefund && !isZeroRevenue) {
+            if (shouldBeChecked) {
+                row.classList.add('bg-green-50');
+            } else {
+                row.classList.remove('bg-green-50');
+            }
+        }
     }
-    else if (!bothAreNumbers && job.isChecked) {
-        job.isChecked = false;
-        updateCheckStatus(jobId, false, () => {
-            filterAndRenderJobs();
-        });
-    }
+    
+    // อัปเดตสรุป
+    updateSummary();
 }
 
 // --- API & DATA FUNCTIONS ---
@@ -149,12 +167,22 @@ function fetchJobs() {
             filterAndRenderJobs(); 
             renderChart();
             
-            // ตรวจสอบและติ๊กอัตโนมัติสำหรับงานที่กรอกรายรับ+ต้นทุนครบแล้ว
+            // ตรวจสอบและอัปเดต UI สำหรับงานที่ควรถูกติ๊ก (ไม่มี pending)
             setTimeout(() => {
                 allJobs.forEach(job => {
-                    if (typeof job.revenue === 'number' && typeof job.cost === 'number' && !job.isChecked) {
+                    const hasPending = (job.revenue === 'pending' || job.cost === 'pending');
+                    const shouldBeChecked = !hasPending;
+                    
+                    if (shouldBeChecked && !job.isChecked) {
                         job.isChecked = true;
                         updateCheckStatus(job.id, true);
+                        
+                        const row = document.querySelector(`#jobs-list tr[data-id="${job.id}"]`);
+                        if (row) {
+                            const checkbox = row.querySelector('.job-checkbox');
+                            if (checkbox) checkbox.checked = true;
+                            row.classList.add('bg-green-50');
+                        }
                     }
                 });
                 updateSummary();
@@ -350,7 +378,7 @@ function filterAndRenderJobs(shouldMaintainScroll = true) {
 function renderJobs(jobs) {
     jobsList.innerHTML = '';
     if (!jobs || jobs.length === 0) {
-        jobsList.innerHTML = `<table><td colspan="7" class="p-4 text-center text-gray-500">ไม่มีรายการ</td><tr>`;
+        jobsList.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">ไม่มีรายการ</td></tr>`;
         updateCheckAllState();
         return;
     }
@@ -385,7 +413,7 @@ function renderJobs(jobs) {
                                 <span class="${profitColor} font-medium">กำไร ${profitText} บาท</span>
                             </div>
                         </div>
-                      </td>
+                       </td>
                   </tr>
             `);
         }
@@ -430,7 +458,7 @@ function renderJobs(jobs) {
             costDisplay = `<span class="text-yellow-500 font-medium">รอดำเนินการ</span>`;
         }
         
-        // ซ่อน checkbox และปุ่มลบ
+        // ซ่อน checkbox (style="display: none;") แต่ปุ่มลบแสดง
         row.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${dateObj.toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'})}</td>
             <td class="px-6 py-4 text-sm text-gray-500">${job.item_no}</td>
@@ -440,7 +468,7 @@ function renderJobs(jobs) {
             <td class="px-6 py-4 text-sm text-center inline-editable cursor-pointer" data-field="cost">${costDisplay}</td>
             <td class="px-6 py-4 text-left text-sm font-medium flex items-center space-x-4">
                 <input type="checkbox" data-id="${job.id}" class="job-checkbox h-4 w-4 text-blue-600" ${job.isChecked ? 'checked' : ''} style="display: none;">
-                <button class="ml-6 text-red-600 hover:text-red-900" style="display: none;" onclick="showDeleteModal(event, 'job', '${job.id}')">ลบ</button>
+                <button class="ml-6 text-red-600 hover:text-red-900" onclick="showDeleteModal(event, 'job', '${job.id}')">ลบ</button>
              </td>
         `;
         currentDay = dateStr;

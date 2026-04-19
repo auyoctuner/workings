@@ -110,6 +110,29 @@ window.handleGenericResponse = (result) => {
     document.getElementById('handleGenericResponse')?.remove();
 };
 
+// --- ฟังก์ชันสำหรับเช็คบ็อกซ์อัตโนมัติเมื่อรายรับและต้นทุนเป็นตัวเลข ---
+function autoCheckWhenComplete(jobId) {
+    const job = allJobs.find(j => j.id === jobId);
+    if (!job) return;
+    
+    const isRevenueNumber = typeof job.revenue === 'number';
+    const isCostNumber = typeof job.cost === 'number';
+    const bothAreNumbers = isRevenueNumber && isCostNumber;
+    
+    // ถ้าทั้งคู่เป็นตัวเลข และยังไม่ได้ติ๊ก ให้ติ๊กอัตโนมัติ
+    if (bothAreNumbers && !job.isChecked) {
+        job.isChecked = true;
+        updateCheckStatus(jobId, true);
+        updateSummary();
+    }
+    // ถ้าไม่ครบ (ตัวใดตัวหนึ่งไม่ใช่ตัวเลข) และเคยติ๊กไว้ ให้ยกเลิกติ๊ก
+    else if (!bothAreNumbers && job.isChecked) {
+        job.isChecked = false;
+        updateCheckStatus(jobId, false);
+        updateSummary();
+    }
+}
+
 // --- API & DATA FUNCTIONS ---
 function fetchAllData() {
     fetchJobs();
@@ -125,6 +148,17 @@ function fetchJobs() {
             populateChartFilterDropdowns();
             filterAndRenderJobs(); 
             renderChart();
+            
+            // ตรวจสอบและติ๊กอัตโนมัติสำหรับงานที่กรอกรายรับ+ต้นทุนครบแล้ว
+            setTimeout(() => {
+                allJobs.forEach(job => {
+                    if (typeof job.revenue === 'number' && typeof job.cost === 'number' && !job.isChecked) {
+                        job.isChecked = true;
+                        updateCheckStatus(job.id, true);
+                    }
+                });
+                updateSummary();
+            }, 100);
         } 
         else { showToast(res.message, 'error'); }
         document.getElementById('handleRepairs')?.remove();
@@ -159,7 +193,10 @@ function updateJob(jobId, jobData) {
         const isDateChanged = jobData.date && jobData.date !== allJobs[jobIndex].date;
         allJobs[jobIndex] = { ...allJobs[jobIndex], ...jobData };
         if(isDateChanged) { fetchJobs(); } 
-        else { filterAndRenderJobs(); }
+        else { 
+            filterAndRenderJobs();
+            autoCheckWhenComplete(jobId);  // ตรวจสอบและติ๊กอัตโนมัติ
+        }
         callApi('update_repair', { id: jobId, data: jobData }, 'handleGenericResponse');
     }
 }
@@ -309,7 +346,7 @@ function filterAndRenderJobs(shouldMaintainScroll = true) {
 function renderJobs(jobs) {
     jobsList.innerHTML = '';
     if (!jobs || jobs.length === 0) {
-        jobsList.innerHTML = `<td><td colspan="7" class="p-4 text-center text-gray-500">ไม่มีรายการ</td></tr>`;
+        jobsList.innerHTML = `<table><td colspan="7" class="p-4 text-center text-gray-500">ไม่มีรายการ</td></tr>`;
         updateCheckAllState();
         return;
     }
@@ -346,7 +383,7 @@ function renderJobs(jobs) {
             revenueHTML = `<span class="text-yellow-500 font-medium">รอดำเนินการ</span>`;
         }
 
-        // ========== แก้ไขส่วนนี้ ==========
+        // แสดงต้นทุน + วงเล็บเปอร์เซ็นต์
         let costDisplay = '';
         if (typeof job.cost === 'number') {
             let percentText = '';
@@ -360,8 +397,8 @@ function renderJobs(jobs) {
         } else {
             costDisplay = `<span class="text-yellow-500 font-medium">รอดำเนินการ</span>`;
         }
-        // ========== จบการแก้ไข ==========
         
+        // ซ่อน checkbox และปุ่มลบตั้งแต่แรก (style="display: none;")
         row.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${dateObj.toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'})}</td>
             <td class="px-6 py-4 text-sm text-gray-500">${job.item_no}</td>
@@ -370,8 +407,8 @@ function renderJobs(jobs) {
             <td class="px-6 py-4 text-sm text-center inline-editable cursor-pointer" data-field="revenue">${revenueHTML}</td>
             <td class="px-6 py-4 text-sm text-center inline-editable cursor-pointer" data-field="cost">${costDisplay}</td>
             <td class="px-6 py-4 text-left text-sm font-medium flex items-center space-x-4">
-                <input type="checkbox" data-id="${job.id}" class="job-checkbox h-4 w-4 text-blue-600" ${job.isChecked ? 'checked' : ''}>
-                <button class="ml-6 text-red-600 hover:text-red-900" onclick="showDeleteModal(event, 'job', '${job.id}')">ลบ</button>
+                <input type="checkbox" data-id="${job.id}" class="job-checkbox h-4 w-4 text-blue-600" ${job.isChecked ? 'checked' : ''} style="display: none;">
+                <button class="ml-6 text-red-600 hover:text-red-900" style="display: none;" onclick="showDeleteModal(event, 'job', '${job.id}')">ลบ</button>
             </td>
         `;
         currentDay = dateStr;
@@ -470,8 +507,13 @@ function renderSummary(jobs) {
         const ns = summary.notes[note];
         const profit = ns.revenue - ns.cost;
         const countText = ns.refundCount > 0 ? `(${ns.count} รายการ, คืนเงิน ${ns.refundCount})` : `(${ns.count} รายการ)`;
-        return `<li class="note-summary-item flex flex-col sm:flex-row justify-between items-start sm:items-center p-2 rounded-md bg-white border hover:shadow-md hover:-translate-y-1 transform transition-all duration-200 cursor-pointer" data-note="${note}"><span class="font-semibold text-lg text-gray-900">${note}</span><div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm mt-1 sm:mt-0"><span class="text-gray-600">${countText}</span><span class="text-green-600">รับ: ${ns.revenue.toLocaleString()}</span><span class="text-red-600">ทุน: ${ns.cost.toLocaleString()}</span><span class="${profit >= 0 ? 'text-blue-600':'text-red-600'}">กำไร: ${profit.toLocaleString()}</span></div></li>`;
+        const profitPercent = ns.revenue > 0 ? ((profit / ns.revenue) * 100).toFixed(1) : 0;
+        const profitText = profit >= 0 ? `กำไร: ${profit.toLocaleString()} บาท (${profitPercent}%)` : `กำไร: ${profit.toLocaleString()} บาท`;
+        return `<li class="note-summary-item flex flex-col sm:flex-row justify-between items-start sm:items-center p-2 rounded-md bg-white border hover:shadow-md hover:-translate-y-1 transform transition-all duration-200 cursor-pointer" data-note="${note}"><span class="font-semibold text-lg text-gray-900">${note}</span><div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm mt-1 sm:mt-0"><span class="text-gray-600">${countText}</span><span class="text-green-600">รับ: ${ns.revenue.toLocaleString()}</span><span class="text-red-600">ทุน: ${ns.cost.toLocaleString()}</span><span class="${profit >= 0 ? 'text-blue-600':'text-red-600'}">${profitText}</span></div></li>`;
     }).join('');
+    
+    const totalProfitPercent = summary.totalRevenue > 0 ? ((totalProfit / summary.totalRevenue) * 100).toFixed(1) : 0;
+    const totalProfitText = totalProfit >= 0 ? `กำไร: ${totalProfit.toLocaleString()} บาท (${totalProfitPercent}%)` : `กำไร: ${totalProfit.toLocaleString()} บาท`;
     
     summaryDiv.innerHTML = `
         <h3 class="text-xl font-bold mb-2 text-gray-800">${title}</h3>
@@ -481,7 +523,7 @@ function renderSummary(jobs) {
                 <span>ทุนรวม: ${summary.totalCost.toLocaleString()}</span>
                 <span class="text-sm font-normal">(${costPercentage}%)</span>
             </div>
-            <div class="p-3 rounded-lg ${totalProfit >= 0 ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'} flex flex-col justify-center"><span>กำไร: ${totalProfit.toLocaleString()}</span></div>
+            <div class="p-3 rounded-lg ${totalProfit >= 0 ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'} flex flex-col justify-center"><span>${totalProfitText}</span></div>
         </div>
         <h4 class="text-base font-semibold mb-2 text-gray-700">สรุปตามหมายเหตุ:</h4>
         <ul class="space-y-2">${notesHtml}</ul>

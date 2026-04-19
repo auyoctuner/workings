@@ -309,7 +309,7 @@ function filterAndRenderJobs(shouldMaintainScroll = true) {
 function renderJobs(jobs) {
     jobsList.innerHTML = '';
     if (!jobs || jobs.length === 0) {
-        jobsList.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">ไม่มีรายการ</td></tr>`;
+        jobsList.innerHTML = `<td><td colspan="7" class="p-4 text-center text-gray-500">ไม่มีรายการ</td></tr>`;
         updateCheckAllState();
         return;
     }
@@ -346,7 +346,7 @@ function renderJobs(jobs) {
             revenueHTML = `<span class="text-yellow-500 font-medium">รอดำเนินการ</span>`;
         }
 
-        // แสดงต้นทุน + วงเล็บเปอร์เซ็นต์
+        // ========== แก้ไขส่วนนี้ ==========
         let costDisplay = '';
         if (typeof job.cost === 'number') {
             let percentText = '';
@@ -360,6 +360,7 @@ function renderJobs(jobs) {
         } else {
             costDisplay = `<span class="text-yellow-500 font-medium">รอดำเนินการ</span>`;
         }
+        // ========== จบการแก้ไข ==========
         
         row.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${dateObj.toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'})}</td>

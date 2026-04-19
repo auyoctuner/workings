@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap');
+
+body {
+    font-family: 'Sarabun', sans-serif;
+    background-color: #f3f4f6;
+}
+
+.toast-container {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    z-index: 1000;
+}
+
+.toast {
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+#jobs-list tr[data-id]:hover {
+    background-color: #f9fafb;
+    cursor: pointer;
+}
+
+.chart-toggle-btn {
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.chart-toggle-btn.active {
+    background-color: #3b82f6;
+    color: white;
+}

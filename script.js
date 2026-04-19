@@ -378,7 +378,7 @@ function filterAndRenderJobs(shouldMaintainScroll = true) {
 function renderJobs(jobs) {
     jobsList.innerHTML = '';
     if (!jobs || jobs.length === 0) {
-        jobsList.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">ไม่มีรายการ</td><tr>`;
+        jobsList.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">ไม่มีรายการ</td></tr>`;
         updateCheckAllState();
         return;
     }
@@ -389,7 +389,7 @@ function renderJobs(jobs) {
         
         // เส้นแบ่งวัน (สีดำ หนา 4px) เมื่อเปลี่ยนวัน
         if (dateStr !== currentDay && currentDay !== null) {
-            jobsList.insertAdjacentHTML('beforeend', `<tr><td colspan="7"><hr class="border-t-4 border-black my-2"></td></tr>`);
+            jobsList.insertAdjacentHTML('beforeend', `<tr><td colspan="7" style="border-top: 4px solid black; padding: 8px 0;"></td></tr>`);
         }
         
         const row = jobsList.insertRow();

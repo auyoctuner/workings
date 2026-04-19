@@ -441,12 +441,21 @@ function renderSummary(jobs) {
     const costPercentage = summary.totalRevenue > 0 ? ((summary.totalCost / summary.totalRevenue) * 100).toFixed(2) : 0;
     const summaryDiv = document.createElement('div');
     summaryDiv.className = 'bg-gray-50 p-4 rounded-lg shadow-inner';
+    
     const notesHtml = Object.keys(summary.notes).sort((a,b) => summary.notes[b].count - summary.notes[a].count).map(note => {
         const ns = summary.notes[note];
         const profit = ns.revenue - ns.cost;
         const countText = ns.refundCount > 0 ? `(${ns.count} รายการ, คืนเงิน ${ns.refundCount})` : `(${ns.count} รายการ)`;
-        return `<li class="note-summary-item flex flex-col sm:flex-row justify-between items-start sm:items-center p-2 rounded-md bg-white border hover:shadow-md hover:-translate-y-1 transform transition-all duration-200 cursor-pointer" data-note="${note}"><span class="font-semibold text-lg text-gray-900">${note}</span><div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm mt-1 sm:mt-0"><span class="text-gray-600">${countText}</span><span class="text-green-600">รับ: ${ns.revenue.toLocaleString()}</span><span class="text-red-600">ทุน: ${ns.cost.toLocaleString()}</span><span class="${profit >= 0 ? 'text-blue-600':'text-red-600'}">กำไร: ${profit.toLocaleString()}</span></div></li>`;
+        // คำนวณเปอร์เซ็นต์กำไร (เฉพาะกรณีที่มีรายรับ)
+        const profitPercent = ns.revenue > 0 ? ((profit / ns.revenue) * 100).toFixed(1) : 0;
+        const profitText = profit >= 0 ? `กำไร: ${profit.toLocaleString()} บาท (${profitPercent}%)` : `กำไร: ${profit.toLocaleString()} บาท`;
+        return `<li class="note-summary-item flex flex-col sm:flex-row justify-between items-start sm:items-center p-2 rounded-md bg-white border hover:shadow-md hover:-translate-y-1 transform transition-all duration-200 cursor-pointer" data-note="${note}"><span class="font-semibold text-lg text-gray-900">${note}</span><div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm mt-1 sm:mt-0"><span class="text-gray-600">${countText}</span><span class="text-green-600">รับ: ${ns.revenue.toLocaleString()}</span><span class="text-red-600">ทุน: ${ns.cost.toLocaleString()}</span><span class="${profit >= 0 ? 'text-blue-600':'text-red-600'}">${profitText}</span></div></li>`;
     }).join('');
+    
+    // คำนวณเปอร์เซ็นต์กำไรรวม
+    const totalProfitPercent = summary.totalRevenue > 0 ? ((totalProfit / summary.totalRevenue) * 100).toFixed(1) : 0;
+    const totalProfitText = totalProfit >= 0 ? `กำไร: ${totalProfit.toLocaleString()} บาท (${totalProfitPercent}%)` : `กำไร: ${totalProfit.toLocaleString()} บาท`;
+    
     summaryDiv.innerHTML = `
         <h3 class="text-xl font-bold mb-2 text-gray-800">${title}</h3>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center text-lg font-semibold mb-4">
@@ -455,7 +464,7 @@ function renderSummary(jobs) {
                 <span>ทุนรวม: ${summary.totalCost.toLocaleString()}</span>
                 <span class="text-sm font-normal">(${costPercentage}%)</span>
             </div>
-            <div class="p-3 rounded-lg ${totalProfit >= 0 ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'} flex flex-col justify-center"><span>กำไร: ${totalProfit.toLocaleString()}</span></div>
+            <div class="p-3 rounded-lg ${totalProfit >= 0 ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'} flex flex-col justify-center"><span>${totalProfitText}</span></div>
         </div>
         <h4 class="text-base font-semibold mb-2 text-gray-700">สรุปตามหมายเหตุ:</h4>
         <ul class="space-y-2">${notesHtml}</ul>

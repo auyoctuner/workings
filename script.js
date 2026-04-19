@@ -378,7 +378,7 @@ function filterAndRenderJobs(shouldMaintainScroll = true) {
 function renderJobs(jobs) {
     jobsList.innerHTML = '';
     if (!jobs || jobs.length === 0) {
-        jobsList.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">ไม่มีรายการ</td></tr>`;
+        jobsList.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">ไม่มีรายการ</td><tr>`;
         updateCheckAllState();
         return;
     }
@@ -386,37 +386,12 @@ function renderJobs(jobs) {
     jobs.forEach(job => {
         let dateObj = new Date(job.date);
         const dateStr = dateObj.toISOString().split('T')[0];
+        
+        // เส้นแบ่งวัน (สีดำ หนา 4px) เมื่อเปลี่ยนวัน
         if (dateStr !== currentDay && currentDay !== null) {
-            // คำนวณกำไรรายวันสำหรับวันที่สิ้นสุด
-            const jobsInDay = jobs.filter(j => new Date(j.date).toISOString().split('T')[0] === currentDay);
-            let dayRevenue = 0, dayCost = 0;
-            jobsInDay.forEach(j => {
-                if (typeof j.revenue === 'number') dayRevenue += j.revenue;
-                if (typeof j.cost === 'number') dayCost += j.cost;
-            });
-            const dayProfit = dayRevenue - dayCost;
-            const profitText = dayProfit >= 0 ? `+${dayProfit.toLocaleString()}` : `-${Math.abs(dayProfit).toLocaleString()}`;
-            const profitColor = dayProfit >= 0 ? 'text-green-600' : 'text-red-600';
-            
-            jobsList.insertAdjacentHTML('beforeend', `
-                <tr class="bg-gray-50">
-                    <td colspan="7" class="py-2 px-4">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <div class="h-px w-6 bg-blue-400"></div>
-                                <span class="text-xs text-blue-600 font-medium">📅 ${new Date(currentDay).toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'})}</span>
-                                <div class="h-px flex-1 bg-gradient-to-r from-blue-400 to-transparent"></div>
-                            </div>
-                            <div class="text-xs">
-                                <span class="text-gray-500">${jobsInDay.length} รายการ</span>
-                                <span class="mx-1 text-gray-300">|</span>
-                                <span class="${profitColor} font-medium">กำไร ${profitText} บาท</span>
-                            </div>
-                        </div>
-                       </td>
-                  </tr>
-            `);
+            jobsList.insertAdjacentHTML('beforeend', `<tr><td colspan="7"><hr class="border-t-4 border-black my-2"></td></tr>`);
         }
+        
         const row = jobsList.insertRow();
         row.dataset.id = job.id;
         const isRefund = job.revenue === 'claim' || job.revenue === 'refund' || (typeof job.revenue === 'number' && job.revenue < 0);
@@ -469,42 +444,10 @@ function renderJobs(jobs) {
             <td class="px-6 py-4 text-left text-sm font-medium flex items-center space-x-4">
                 <input type="checkbox" data-id="${job.id}" class="job-checkbox h-4 w-4 text-blue-600" ${job.isChecked ? 'checked' : ''} style="display: none;">
                 <button class="ml-6 text-red-600 hover:text-red-900" onclick="showDeleteModal(event, 'job', '${job.id}')">ลบ</button>
-             </td>
+            穷
         `;
         currentDay = dateStr;
     });
-    
-    // เพิ่มเส้นแบ่งสำหรับวันสุดท้าย
-    if (currentDay) {
-        const jobsInDay = jobs.filter(j => new Date(j.date).toISOString().split('T')[0] === currentDay);
-        let dayRevenue = 0, dayCost = 0;
-        jobsInDay.forEach(j => {
-            if (typeof j.revenue === 'number') dayRevenue += j.revenue;
-            if (typeof j.cost === 'number') dayCost += j.cost;
-        });
-        const dayProfit = dayRevenue - dayCost;
-        const profitText = dayProfit >= 0 ? `+${dayProfit.toLocaleString()}` : `-${Math.abs(dayProfit).toLocaleString()}`;
-        const profitColor = dayProfit >= 0 ? 'text-green-600' : 'text-red-600';
-        
-        jobsList.insertAdjacentHTML('beforeend', `
-            <tr class="bg-gray-50">
-                <td colspan="7" class="py-2 px-4">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <div class="h-px w-6 bg-blue-400"></div>
-                            <span class="text-xs text-blue-600 font-medium">📅 ${new Date(currentDay).toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'})}</span>
-                            <div class="h-px flex-1 bg-gradient-to-r from-blue-400 to-transparent"></div>
-                        </div>
-                        <div class="text-xs">
-                            <span class="text-gray-500">${jobsInDay.length} รายการ</span>
-                            <span class="mx-1 text-gray-300">|</span>
-                            <span class="${profitColor} font-medium">กำไร ${profitText} บาท</span>
-                        </div>
-                    </div>
-                   </td>
-              </tr>
-        `);
-    }
     
     document.querySelectorAll('.job-checkbox').forEach(cb => cb.addEventListener('change', handleJobCheckboxChange));
     updateCheckAllState();

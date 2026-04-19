@@ -378,7 +378,7 @@ function filterAndRenderJobs(shouldMaintainScroll = true) {
 function renderJobs(jobs) {
     jobsList.innerHTML = '';
     if (!jobs || jobs.length === 0) {
-        jobsList.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">ไม่มีรายการ</td></tr>`;
+        jobsList.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">ไม่มีรายการ</td></tr>`;
         updateCheckAllState();
         return;
     }
@@ -387,9 +387,9 @@ function renderJobs(jobs) {
         let dateObj = new Date(job.date);
         const dateStr = dateObj.toISOString().split('T')[0];
         
-        // เส้นแบ่งวัน (สีดำ หนา 4px) เมื่อเปลี่ยนวัน
+        // เส้นแบ่งวัน (สีดำ หนา 4px) เมื่อเปลี่ยนวัน - ใช้ colspan=6
         if (dateStr !== currentDay && currentDay !== null) {
-            jobsList.insertAdjacentHTML('beforeend', `<tr><td colspan="7" style="border-top: 4px solid black; padding: 8px 0;"></td></tr>`);
+            jobsList.insertAdjacentHTML('beforeend', `<tr><td colspan="6" style="border-top: 4px solid black; padding: 8px 0;">穷穷</tr>`);
         }
         
         const row = jobsList.insertRow();
@@ -441,10 +441,6 @@ function renderJobs(jobs) {
             <td class="px-6 py-4 text-sm text-gray-500 inline-editable cursor-pointer" data-field="device">${job.device}</td>
             <td class="px-6 py-4 text-sm text-center inline-editable cursor-pointer" data-field="revenue">${revenueHTML}</td>
             <td class="px-6 py-4 text-sm text-center inline-editable cursor-pointer" data-field="cost">${costDisplay}</td>
-            <td class="px-6 py-4 text-left text-sm font-medium flex items-center space-x-4">
-                <input type="checkbox" data-id="${job.id}" class="job-checkbox h-4 w-4 text-blue-600" ${job.isChecked ? 'checked' : ''} style="display: none;">
-                <button class="ml-6 text-red-600 hover:text-red-900" onclick="showDeleteModal(event, 'job', '${job.id}')">ลบ</button>
-            穷
         `;
         currentDay = dateStr;
     });

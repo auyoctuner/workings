@@ -344,7 +344,7 @@ function filterAndRenderJobs(shouldMaintainScroll = true) {
 function renderJobs(jobs) {
     jobsList.innerHTML = '';
     if (!jobs || jobs.length === 0) {
-        jobsList.innerHTML = `<table><td colspan="6" class="p-4 text-center text-gray-500">ไม่มีรายการ</td></tr>`;
+        jobsList.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">ไม่มีรายการ穷穷</tr>`;
         return;
     }
     jobs.forEach(job => {

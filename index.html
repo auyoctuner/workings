@@ -229,9 +229,9 @@
             <div class="w-full sm:w-[220px] lg:w-[240px] sm:flex-shrink-0">
                 <label for="repair-date-day" class="block text-xs text-gray-500">วันที่</label>
                 <div class="flex space-x-1 mt-1">
-                    <select id="repair-date-day" class="block w-12 px-1 py-2 sm:py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"></select>
-                    <select id="repair-date-month" class="block flex-1 px-1 py-2 sm:py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"></select>
-                    <select id="repair-date-year" class="block w-16 px-1 py-2 sm:py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"></select>
+                    <select id="repair-date-day" class="block w-14 sm:w-12 px-1 py-2 sm:py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"></select>
+                    <select id="repair-date-month" class="block flex-1 min-w-0 px-1 py-2 sm:py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"></select>
+                    <select id="repair-date-year" class="block w-[72px] sm:w-16 px-1 py-2 sm:py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"></select>
                 </div>
             </div>
             <div class="w-full sm:flex-1 sm:min-w-0">
@@ -1161,11 +1161,23 @@ function renderDailyTrendChart() {
                 x: { 
                     grid: { display: false },
                     ticks: {
-                        font: { family: 'Sarabun', size: isMobile() ? 9 : 11 },
-                        color: '#6b7280',
+                        font: { 
+                            family: 'Sarabun', 
+                            size: isMobile() ? 10 : 11,
+                            weight: '500'
+                        },
+                        color: '#4b5563',
                         maxRotation: 0,
-                        autoSkip: true,
-                        autoSkipPadding: isMobile() ? 5 : 10
+                        minRotation: 0,
+                        autoSkip: false,
+                        callback: function(value, index) {
+                            const day = index + 1;
+                            // แสดงวันที่ 1 และวันที่หาร 5 ลงตัว (5, 10, 15, 20, 25, 30)
+                            if (day === 1 || day % 5 === 0) {
+                                return day;
+                            }
+                            return '';
+                        }
                     },
                     border: { display: false }
                 }
@@ -1176,16 +1188,67 @@ function renderDailyTrendChart() {
             afterDatasetsDraw: (chart) => {
                 const { ctx } = chart;
                 ctx.save();
-                ctx.font = `bold ${isMobile() ? 8 : 10}px Sarabun`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'bottom';
+                const isMobileView = isMobile();
+                const dataArr = chart.data.datasets[0].data;
                 const profitDatasetMeta = chart.getDatasetMeta(0);
+                
+                let topIndices = new Set();
+                if (isMobileView) {
+                    const indexed = dataArr.map((val, i) => ({ val, i }))
+                        .filter(item => item.val !== null && item.val !== 0);
+                    indexed.sort((a, b) => Math.abs(b.val) - Math.abs(a.val));
+                    topIndices = new Set(indexed.slice(0, 5).map(item => item.i));
+                }
+                
                 profitDatasetMeta.data.forEach((bar, index) => {
-                    const data = chart.data.datasets[0].data[index];
-                    if (data !== null && data !== 0) {
-                        if (isMobile() && data < 1000 && index % 2 !== 0) return;
-                        const value = data.toLocaleString();
-                        const yPos = bar.y + (data >= 0 ? -6 : 16); 
+                    const data = dataArr[index];
+                    if (data === null || data === 0) return;
+                    
+                    if (isMobileView) {
+                        if (!topIndices.has(index)) return;
+                    }
+                    
+                    let value;
+                    if (Math.abs(data) >= 1000) {
+                        value = (data / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+                    } else {
+                        value = Math.round(data).toLocaleString();
+                    }
+                    
+                    const yPos = bar.y + (data >= 0 ? -6 : 16);
+                    
+                    if (isMobileView) {
+                        ctx.font = 'bold 9px Sarabun';
+                        const textWidth = ctx.measureText(value).width;
+                        const padding = 3;
+                        const rectX = bar.x - textWidth / 2 - padding;
+                        const rectY = yPos - 10;
+                        const rectW = textWidth + padding * 2;
+                        const rectH = 12;
+                        
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                        ctx.beginPath();
+                        if (ctx.roundRect) {
+                            ctx.roundRect(rectX, rectY, rectW, rectH, 3);
+                        } else {
+                            ctx.rect(rectX, rectY, rectW, rectH);
+                        }
+                        ctx.fill();
+                        
+                        ctx.strokeStyle = data >= profitGoal ? 'rgba(5, 150, 105, 0.6)' : 
+                                          (data >= 0 ? 'rgba(220, 38, 38, 0.6)' : 'rgba(153, 27, 27, 0.6)');
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                        
+                        ctx.fillStyle = data >= profitGoal ? 'rgba(5, 150, 105, 1)' : 
+                                        (data >= 0 ? 'rgba(185, 28, 28, 1)' : 'rgba(127, 29, 29, 1)');
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(value, bar.x, rectY + rectH / 2);
+                    } else {
+                        ctx.font = 'bold 10px Sarabun';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
                         ctx.fillStyle = data >= profitGoal ? 'rgba(5, 150, 105, 1)' : (data >= 0 ? 'rgba(220, 38, 38, 0.9)' : 'rgba(153, 27, 27, 1)');
                         ctx.fillText(value, bar.x, yPos);
                     }
@@ -1423,15 +1486,53 @@ function renderMonthlyTrendChart() {
             afterDatasetsDraw: (chart) => {
                 const { ctx } = chart;
                 ctx.save();
-                ctx.font = `bold ${isMobile() ? 8 : 10}px Sarabun`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'bottom';
+                const isMobileView = isMobile();
+                const dataArr = chart.data.datasets[0].data;
                 const datasetMeta = chart.getDatasetMeta(0);
+                
                 datasetMeta.data.forEach((bar, index) => {
-                    const data = chart.data.datasets[0].data[index];
-                    if (data !== null && data !== 0) {
-                        const value = data.toLocaleString();
-                        const yPos = bar.y + (data >= 0 ? -6 : 16); 
+                    const data = dataArr[index];
+                    if (data === null || data === 0) return;
+                    
+                    let value;
+                    if (Math.abs(data) >= 1000) {
+                        value = (data / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+                    } else {
+                        value = Math.round(data).toLocaleString();
+                    }
+                    
+                    const yPos = bar.y + (data >= 0 ? -6 : 16);
+                    
+                    if (isMobileView) {
+                        ctx.font = 'bold 8px Sarabun';
+                        const textWidth = ctx.measureText(value).width;
+                        const padding = 2;
+                        const rectX = bar.x - textWidth / 2 - padding;
+                        const rectY = yPos - 9;
+                        const rectW = textWidth + padding * 2;
+                        const rectH = 11;
+                        
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                        ctx.beginPath();
+                        if (ctx.roundRect) {
+                            ctx.roundRect(rectX, rectY, rectW, rectH, 2);
+                        } else {
+                            ctx.rect(rectX, rectY, rectW, rectH);
+                        }
+                        ctx.fill();
+                        
+                        ctx.strokeStyle = data >= 0 ? 'rgba(37, 99, 235, 0.6)' : 'rgba(185, 28, 28, 0.6)';
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                        
+                        ctx.fillStyle = data >= 0 ? 'rgba(37, 99, 235, 1)' : 'rgba(185, 28, 28, 1)';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(value, bar.x, rectY + rectH / 2);
+                    } else {
+                        ctx.font = 'bold 10px Sarabun';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
                         ctx.fillStyle = data >= 0 ? 'rgba(37, 99, 235, 0.9)' : 'rgba(185, 28, 28, 1)';
                         ctx.fillText(value, bar.x, yPos);
                     }
@@ -1677,6 +1778,22 @@ function initializeApp() {
             }
         }, 300);
     });
+}
+
+// Fallback สำหรับ browser เก่าที่ไม่มี roundRect
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+        if (w < 2 * r) r = w / 2;
+        if (h < 2 * r) r = h / 2;
+        this.beginPath();
+        this.moveTo(x + r, y);
+        this.arcTo(x + w, y, x + w, y + h, r);
+        this.arcTo(x + w, y + h, x, y + h, r);
+        this.arcTo(x, y + h, x, y, r);
+        this.arcTo(x, y, x + w, y, r);
+        this.closePath();
+        return this;
+    };
 }
 
 initializeApp();

@@ -1192,22 +1192,11 @@ function renderDailyTrendChart() {
                 const dataArr = chart.data.datasets[0].data;
                 const profitDatasetMeta = chart.getDatasetMeta(0);
                 
-                let topIndices = new Set();
-                if (isMobileView) {
-                    const indexed = dataArr.map((val, i) => ({ val, i }))
-                        .filter(item => item.val !== null && item.val !== 0);
-                    indexed.sort((a, b) => Math.abs(b.val) - Math.abs(a.val));
-                    topIndices = new Set(indexed.slice(0, 5).map(item => item.i));
-                }
-                
                 profitDatasetMeta.data.forEach((bar, index) => {
                     const data = dataArr[index];
                     if (data === null || data === 0) return;
                     
-                    if (isMobileView) {
-                        if (!topIndices.has(index)) return;
-                    }
-                    
+                    // === จัดรูปแบบตัวเลข ===
                     let value;
                     if (Math.abs(data) >= 1000) {
                         value = (data / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
@@ -1218,18 +1207,19 @@ function renderDailyTrendChart() {
                     const yPos = bar.y + (data >= 0 ? -6 : 16);
                     
                     if (isMobileView) {
-                        ctx.font = 'bold 9px Sarabun';
+                        // === มือถือ: วาดป้ายพื้นหลังขาว อ่านง่าย ===
+                        ctx.font = 'bold 8px Sarabun';
                         const textWidth = ctx.measureText(value).width;
-                        const padding = 3;
+                        const padding = 2;
                         const rectX = bar.x - textWidth / 2 - padding;
                         const rectY = yPos - 10;
                         const rectW = textWidth + padding * 2;
-                        const rectH = 12;
+                        const rectH = 11;
                         
                         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
                         ctx.beginPath();
                         if (ctx.roundRect) {
-                            ctx.roundRect(rectX, rectY, rectW, rectH, 3);
+                            ctx.roundRect(rectX, rectY, rectW, rectH, 2);
                         } else {
                             ctx.rect(rectX, rectY, rectW, rectH);
                         }
@@ -1246,6 +1236,7 @@ function renderDailyTrendChart() {
                         ctx.textBaseline = 'middle';
                         ctx.fillText(value, bar.x, rectY + rectH / 2);
                     } else {
+                        // === คอม: แสดงแบบเดิม ===
                         ctx.font = 'bold 10px Sarabun';
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'bottom';
